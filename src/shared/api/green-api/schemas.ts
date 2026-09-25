@@ -188,8 +188,6 @@ export const notificationEnvelopeSchema = z.strictObject({
 })
 
 export type TInstanceState = z.infer<typeof stateInstanceSchema>
-export type TCheckWhatsappResponse = z.infer<typeof checkWhatsappResponseSchema>
-export type TSendMessageResponse = z.infer<typeof sendMessageResponseSchema>
 export type TMessageData = z.infer<typeof messageDataSchema>
 export type TWebhook = z.infer<typeof webhookSchema>
 export type TOutgoingMessageStatus = Extract<
