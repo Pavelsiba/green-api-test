@@ -1,0 +1,61 @@
+/* Поле ввода как на web.max.ru: заливка без рамки, 52px, радиус 16px, текст 15/20 */
+.input {
+  --input-height: 52px;
+  --input-bg: var(--background-tertiary);
+  --input-bd: transparent;
+  --input-bd-focus: var(--stroke-themed);
+  --input-color: var(--text-primary);
+  --input-fz: 15px;
+
+  letter-spacing: 0.15px;
+}
+
+.label {
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 16px;
+  color: var(--text-secondary);
+}
+
+/* Подсказка и ошибка под полем: description 13/16 */
+.hint {
+  margin-top: 6px;
+  padding-inline: 12px;
+  font-size: 13px;
+  line-height: 16px;
+  letter-spacing: 0.2px;
+}
+
+/* Кнопки MAX: полужирный 500, без uppercase, disabled — полупрозрачный primary */
+.button {
+  font-weight: 500;
+  letter-spacing: 0.15px;
+
+  /*
+   * У Mantine hover темнее основного цвета, у MAX — светлее; нажатие — темнее.
+   * Вариант filled по умолчанию идёт без data-variant.
+   */
+  &:where(:not([data-variant]), [data-variant="filled"]):not(
+      :disabled,
+      [data-disabled],
+      [data-loading]
+    ) {
+    @media (hover: hover) {
+      &:hover {
+        background: var(--states-button-primary-hover);
+      }
+    }
+
+    &:active {
+      background: var(--states-button-primary-pressed);
+    }
+  }
+
+  &:where(:not([data-variant]), [data-variant="filled"]):where(:disabled, [data-disabled]):not(
+      [data-loading]
+    ) {
+    background: var(--states-button-primary-disabled);
+    color: rgb(255 255 255 / 72%);
+  }
+}

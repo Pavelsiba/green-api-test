@@ -1,0 +1,175 @@
+/*
+ * Палитра мессенджера MAX, тема «space» (по умолчанию), снята с CSS web.max.ru 2026-09-26.
+ * Имена переменных сохранены как у MAX, чтобы сверяться с исходником.
+ * Схема переключается атрибутом Mantine data-mantine-color-scheme на <html>.
+ */
+
+:root,
+:root[data-mantine-color-scheme="light"] {
+  --background-surface: #edeef2;
+  --background-primary: #fff;
+  --background-secondary: #f5f7fa;
+  --background-tertiary: #0909090d;
+  --background-card: #fff;
+  --background-overlay: #0c0d0e52;
+  --icon-primary: #060708d6;
+  --icon-secondary: #060708a3;
+  --icon-tertiary: #0607087a;
+  --icon-mute: #06070847;
+  --icon-themed: #007aff;
+  --icon-positive: #1abe43;
+  --icon-negative: #ff303c;
+  --icon-attention: #fc0;
+  --text-primary: #060708;
+  --text-secondary: #060708ad;
+  --text-tertiary: #06070885;
+  --text-mute: #06070866;
+  --text-themed: #007aff;
+  --text-positive: #1abe43;
+  --text-negative: #ff303c;
+  --text-attention: #fc0;
+  --stroke-themed: #007aff;
+  --stroke-secondary: #0c0d0e85;
+  --stroke-tertiary: #9da4ac4d;
+  --stroke-negative: #ff303c;
+  --divider-primary: #0c0d0e29;
+  --divider-secondary: #0c0d0e0f;
+  --button-primary: #007aff;
+  --button-secondary: #e9ebf1;
+  --button-primary-contrast: #fff;
+  --button-negative: #ff303c;
+  --button-negative-fade: #ff303c29;
+  --avatar-chat-coral-step-1: #ff48b6;
+  --avatar-chat-coral-step-2: #ff8a35;
+  --avatar-chat-orange-step-1: #ffc93d;
+  --avatar-chat-orange-step-2: #ff832a;
+  --avatar-chat-green-step-1: #14e1d5;
+  --avatar-chat-green-step-2: #03c722;
+  --avatar-chat-sky-step-1: #08d7f3;
+  --avatar-chat-sky-step-2: #5398ff;
+  --avatar-chat-violet-step-1: #bf97ff;
+  --avatar-chat-violet-step-2: #526eff;
+  --chat-background-background-step-1: #99d5d7;
+  --chat-background-background-step-2: #80bcff;
+  --chat-ground: #7ab7e4;
+  --counter-attention: #ff303c;
+  --counter-mute: #0607081f;
+  --counter-themed: #007aff;
+  --input-background: #09090914;
+  --writebar-input-flat: #fff;
+  --writebar-input-text: #0c0d0e;
+  --writebar-input-stroke: #0c0d0e0f;
+  --writebar-divider: #0c0d0e0f;
+  --shadow-focused-default: #6d92ca;
+  --states-background-card-hover: #f6f6f6;
+  --states-background-card-pressed: #fafafa;
+  --states-background-card-selected: #007aff14;
+  --states-button-primary-hover: #479fff;
+  --states-button-primary-pressed: #006ee5;
+  --states-button-primary-disabled: #007aff7a;
+}
+
+:root[data-mantine-color-scheme="dark"] {
+  --background-surface: #0f0f12;
+  --background-primary: #17181c;
+  --background-secondary: #25262d;
+  --background-tertiary: #ffffff17;
+  --background-card: #25262d;
+  --background-overlay: #0d0d0da3;
+  --icon-primary: #fff;
+  --icon-secondary: #ffffffad;
+  --icon-tertiary: #ffffff85;
+  --icon-mute: #ffffff5c;
+  --icon-themed: #007aff;
+  --icon-positive: #2bc644;
+  --icon-negative: #ce4257;
+  --icon-attention: #ffd60a;
+  --text-primary: #fff;
+  --text-secondary: #fffc;
+  --text-tertiary: #ffffffa3;
+  --text-mute: #fff6;
+  --text-themed: #007aff;
+  --text-positive: #2bc644;
+  --text-negative: #ce4257;
+  --text-attention: #ffd60a;
+  --stroke-themed: #007aff;
+  --stroke-secondary: #ffffff70;
+  --stroke-tertiary: #ffffff29;
+  --stroke-negative: #ff444f;
+  --divider-primary: #ffffff1f;
+  --divider-secondary: #ffffff0f;
+  --button-primary: #007aff;
+  --button-secondary: #434455;
+  --button-primary-contrast: #fff;
+  --button-negative: #ce4257;
+  --button-negative-fade: #ce425729;
+  --avatar-chat-coral-step-1: #ff48b6;
+  --avatar-chat-coral-step-2: #ff8a35;
+  --avatar-chat-orange-step-1: #ffc93d;
+  --avatar-chat-orange-step-2: #ff832a;
+  --avatar-chat-green-step-1: #14e1d5;
+  --avatar-chat-green-step-2: #03c722;
+  --avatar-chat-sky-step-1: #08d7f3;
+  --avatar-chat-sky-step-2: #5398ff;
+  --avatar-chat-violet-step-1: #bf97ff;
+  --avatar-chat-violet-step-2: #526eff;
+  --chat-background-background-step-1: #141414;
+  --chat-background-background-step-2: #141414;
+  --chat-ground: #141414;
+  --counter-attention: #ce4257;
+  --counter-mute: #ffffff47;
+  --counter-themed: #007aff;
+  --input-background: #ffffff17;
+  --writebar-input-flat: #1e1f24;
+  --writebar-input-text: #e7e7e7;
+  --writebar-input-stroke: #e7e7e700;
+  --writebar-divider: #e7e7e70f;
+  --shadow-focused-default: #709ada;
+  --states-background-card-hover: #32343d;
+  --states-background-card-pressed: #1f2026;
+  --states-background-card-selected: #2c2d37;
+  --states-button-primary-hover: #479fff;
+  --states-button-primary-pressed: #006ee5;
+  --states-button-primary-disabled: #ffffff1f;
+}
+
+/* Пузыри сообщений: контейнер помечается data-bubbles-variant */
+:root [data-bubbles-variant="incoming"] {
+  --bubbles-background-bubble: #fff;
+  --bubbles-text-body: #060708;
+  --bubbles-text-body-secondary: #06070885;
+  --bubbles-text-author: #0784b8;
+  --bubbles-text-time: #06070885;
+  --bubbles-text-link: #0784b8;
+  --bubbles-icon-read-status: #06070885;
+}
+
+:root [data-bubbles-variant="outgoing"] {
+  --bubbles-background-bubble: #e9fdff;
+  --bubbles-text-body: #011c29;
+  --bubbles-text-body-secondary: #011c2985;
+  --bubbles-text-author: #0784b8;
+  --bubbles-text-time: #0784b8;
+  --bubbles-text-link: #0784b8;
+  --bubbles-icon-read-status: #0f8ec2;
+}
+
+:root[data-mantine-color-scheme="dark"] [data-bubbles-variant="incoming"] {
+  --bubbles-background-bubble: #232e3a;
+  --bubbles-text-body: #fff;
+  --bubbles-text-body-secondary: #ffffff85;
+  --bubbles-text-author: #fff;
+  --bubbles-text-time: #ffffffa3;
+  --bubbles-text-link: #fff;
+  --bubbles-icon-read-status: #ffffff80;
+}
+
+:root[data-mantine-color-scheme="dark"] [data-bubbles-variant="outgoing"] {
+  --bubbles-background-bubble: #6965e5;
+  --bubbles-text-body: #fff;
+  --bubbles-text-body-secondary: #ffffffa3;
+  --bubbles-text-author: #fff;
+  --bubbles-text-time: #ffffffa3;
+  --bubbles-text-link: #fff;
+  --bubbles-icon-read-status: #ffffffe0;
+}

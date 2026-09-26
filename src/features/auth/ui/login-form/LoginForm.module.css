@@ -1,0 +1,74 @@
+.form {
+  width: 100%;
+  max-width: 400px;
+}
+
+/* subheader MAX: 20/24, 600 */
+.title {
+  margin: 0;
+  font-size: 20px;
+  line-height: 24px;
+  text-align: center;
+  color: var(--text-primary);
+}
+
+/* detail MAX: 15/20 */
+.subtitle {
+  margin: 0;
+  font-size: 15px;
+  line-height: 20px;
+  letter-spacing: 0.15px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.link {
+  color: var(--text-themed);
+  text-decoration: none;
+}
+
+/* 22px = отступ 6px + строка подсказки 16px: место есть всегда, ошибка его только заполняет */
+.field {
+  position: relative;
+  padding-bottom: 22px;
+}
+
+/*
+ * При ошибке Mantine пишет в инлайн-стиль обёртки --input-margin-bottom (5px),
+ * а место под ошибку уже зарезервировано — гасим сам margin.
+ */
+.field .fieldWrapper {
+  margin-bottom: 0;
+}
+
+.fieldError {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/*
+ * Ошибка сервера: две строки description MAX (13/16) зарезервированы заранее.
+ * Самое длинное сообщение укладывается в две строки и на ширине 320px.
+ */
+.status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  margin: 4px 0 16px;
+  padding-inline: 12px;
+  font-size: 13px;
+  line-height: 16px;
+  letter-spacing: 0.2px;
+  text-align: center;
+  color: var(--text-negative);
+}
+
+/* кнопка-«большая» MAX: 60px, радиус 20px, 17px */
+.submit {
+  font-size: 17px;
+}
