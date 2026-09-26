@@ -64,7 +64,7 @@ bun run dev
 | `bun run lint:dead` | knip — неиспользуемые файлы, экспорты и зависимости |
 | `bun run typecheck` | TypeScript без сборки |
 
-Деплой на GitHub Pages — автоматически при пуше в `main` (`.github/workflows/deploy.yml`).
+CI (`.github/workflows/deploy.yml`): на пуш и pull request в `main` — typecheck, lint, knip и тесты; при пуше в `main` после них — сборка и деплой на GitHub Pages.
 
 ## Стек
 
