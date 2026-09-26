@@ -24,3 +24,24 @@ dist-ssr
 *.sw?
 
 .env
+
+# AI agents: instructions, settings, MCP configs and caches
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+.mcp.json
+AGENTS.md
+.agents/
+.cursor/
+.cursorrules
+.cursorignore
+.windsurf/
+.windsurfrules
+.codex/
+.gemini/
+GEMINI.md
+.aider*
+.continue/
+.serena/
+.playwright-mcp/
+.github/copilot-instructions.md
