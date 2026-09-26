@@ -1,0 +1,37 @@
+.avatar {
+  --avatar-from: var(--avatar-chat-sky-step-1);
+  --avatar-to: var(--avatar-chat-sky-step-2);
+
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: var(--avatar-size);
+  height: var(--avatar-size);
+  border-radius: 50%;
+  background: linear-gradient(180deg, var(--avatar-from) 0%, var(--avatar-to) 100%);
+  font-size: calc(var(--avatar-size) * 0.36);
+  font-weight: 500;
+  line-height: 1;
+  color: #fff;
+  user-select: none;
+
+  &[data-color="coral"] {
+    --avatar-from: var(--avatar-chat-coral-step-1);
+    --avatar-to: var(--avatar-chat-coral-step-2);
+  }
+
+  &[data-color="orange"] {
+    --avatar-from: var(--avatar-chat-orange-step-1);
+    --avatar-to: var(--avatar-chat-orange-step-2);
+  }
+
+  &[data-color="green"] {
+    --avatar-from: var(--avatar-chat-green-step-1);
+    --avatar-to: var(--avatar-chat-green-step-2);
+  }
+
+  &[data-color="violet"] {
+    --avatar-from: var(--avatar-chat-violet-step-1);
+    --avatar-to: var(--avatar-chat-violet-step-2);
+  }
+}

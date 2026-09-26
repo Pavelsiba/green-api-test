@@ -1,0 +1,21 @@
+.separator {
+  position: sticky;
+  top: 8px;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  margin: 8px 0;
+  pointer-events: none;
+}
+
+/* capsule MAX: --capsule-outside, радиус 10, 13/16, белый текст, размытие фона */
+.capsule {
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--capsule-outside);
+  backdrop-filter: blur(25px);
+  font-size: 13px;
+  line-height: 16px;
+  letter-spacing: 0.15px;
+  color: #fff;
+}

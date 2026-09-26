@@ -1,0 +1,60 @@
+/* sidebar MAX: --background-surface, на всю высоту, список прокручивается сам */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  background: var(--background-surface);
+}
+
+.header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  padding: 0 12px 0 20px;
+}
+
+.actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+/* subheader MAX: 20/24, 600 */
+.title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 24px;
+  color: var(--text-primary);
+}
+
+.list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  padding: 4px 8px 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.state {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  padding: 32px 24px;
+  font-size: 15px;
+  line-height: 20px;
+  text-align: center;
+  color: var(--text-tertiary);
+
+  & p {
+    margin: 0;
+  }
+}

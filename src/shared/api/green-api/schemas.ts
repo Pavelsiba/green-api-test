@@ -75,27 +75,40 @@ export const deleteNotificationResponseSchema = z.strictObject({
 
 // ─── вебхуки ──────────────────────────────────────────────────────────────
 
+const outgoingStatusSchema = z.enum([
+  "pending",
+  "sent",
+  "delivered",
+  "read",
+  "failed",
+  "noAccount",
+  "notInGroup"
+])
+
 const textMessageDataSchema = z.strictObject({
   typeMessage: z.literal("textMessage"),
   textMessageData: z.strictObject({ textMessage: z.string() })
 })
 
+/** Одинаков в вебхуке (`extendedTextMessageData`) и в журнале (`extendedTextMessage`) */
+const extendedTextSchema = z.strictObject({
+  text: z.string().check(z.describe("Сюда кладётся текст, отправленный через API или со ссылкой")),
+  description: z.optional(z.string()),
+  title: z.optional(z.string()),
+  previewType: z.optional(z.string()),
+  jpegThumbnail: z.optional(z.string()),
+  forwardingScore: z.optional(z.number()),
+  isForwarded: z.optional(z.boolean())
+})
+
 const extendedTextMessageDataSchema = z.strictObject({
   typeMessage: z.literal("extendedTextMessage"),
-  extendedTextMessageData: z.strictObject({
-    text: z
-      .string()
-      .check(z.describe("Сюда кладётся текст, отправленный через API или со ссылкой")),
-    description: z.optional(z.string()),
-    title: z.optional(z.string()),
-    previewType: z.optional(z.string()),
-    jpegThumbnail: z.optional(z.string()),
-    forwardingScore: z.optional(z.number()),
-    isForwarded: z.optional(z.boolean())
-  })
+  extendedTextMessageData: extendedTextSchema
 })
 
 const TEXT_MESSAGE_TYPES: readonly string[] = ["textMessage", "extendedTextMessage"]
+
+const isNotTextType = (typeMessage: string) => !TEXT_MESSAGE_TYPES.includes(typeMessage)
 
 /**
  * Нестрогая намеренно: у медиа, опросов и реакций свои поля, которые мы не моделируем.
@@ -103,10 +116,12 @@ const TEXT_MESSAGE_TYPES: readonly string[] = ["textMessage", "extendedTextMessa
  * показалось бы «неподдерживаемым» вместо сигнала о дрейфе.
  */
 const unsupportedMessageDataSchema = z.looseObject({
-  typeMessage: z.string().check(
-    z.describe("Медиа, опросы, реакции: вне скоупа, показываются как неподдерживаемые"),
-    z.refine((typeMessage) => !TEXT_MESSAGE_TYPES.includes(typeMessage))
-  )
+  typeMessage: z
+    .string()
+    .check(
+      z.describe("Медиа, опросы, реакции: вне скоупа, показываются как неподдерживаемые"),
+      z.refine(isNotTextType)
+    )
 })
 
 const messageDataSchema = z.union([
@@ -164,7 +179,7 @@ export const webhookSchema = z.discriminatedUnion("typeWebhook", [
     idMessage: idMessageSchema,
     timestamp: timestampSchema,
     instanceData: instanceDataSchema,
-    status: z.enum(["pending", "sent", "delivered", "read", "failed", "noAccount", "notInGroup"]),
+    status: outgoingStatusSchema,
     sendByApi: z.boolean()
   }),
   z.strictObject({
@@ -187,7 +202,85 @@ export const notificationEnvelopeSchema = z.strictObject({
   body: z.looseObject({ typeWebhook: z.string() })
 })
 
-export type TInstanceState = z.infer<typeof stateInstanceSchema>
+// ─── журнал сообщений: getChatHistory, lastIncomingMessages, lastOutgoingMessages ───
+
+/**
+ * Поля записи журнала плоские, в отличие от вебхука. Формы сняты с живых ответов 2026-09-26.
+ * Входящий extendedTextMessage в журнале вживую не видели: если придёт в другой форме,
+ * запись станет `unknown` с предупреждением о дрейфе, а не уронит весь список.
+ */
+const journalBaseShape = {
+  idMessage: idMessageSchema,
+  timestamp: timestampSchema,
+  chatId: z
+    .string()
+    .check(z.describe("@c.us — личный чат, @g.us — группа: журнал отдаёт и группы")),
+  deletedMessageId: z.string(),
+  editedMessageId: z.string(),
+  isEdited: z.boolean(),
+  isDeleted: z.boolean()
+}
+
+const journalIncomingShape = {
+  ...journalBaseShape,
+  type: z.literal("incoming"),
+  senderId: z.string(),
+  senderName: z.string(),
+  senderContactName: z.string(),
+  isRead: z.optional(z.boolean()),
+  isReadTimestamp: z.optional(z.number())
+}
+
+const journalOutgoingShape = {
+  ...journalBaseShape,
+  type: z.literal("outgoing"),
+  statusMessage: outgoingStatusSchema,
+  sendByApi: z.boolean().check(z.describe("false — отправлено с телефона"))
+}
+
+const journalTextShape = {
+  typeMessage: z.literal("textMessage"),
+  textMessage: z.string()
+}
+
+const journalExtendedTextShape = {
+  typeMessage: z.literal("extendedTextMessage"),
+  textMessage: z.string().check(z.describe("Дублирует extendedTextMessage.text")),
+  extendedTextMessage: extendedTextSchema
+}
+
+const journalTextMessageSchema = z.union([
+  z.strictObject({ ...journalIncomingShape, ...journalTextShape }),
+  z.strictObject({ ...journalIncomingShape, ...journalExtendedTextShape }),
+  z.strictObject({ ...journalOutgoingShape, ...journalTextShape }),
+  z.strictObject({ ...journalOutgoingShape, ...journalExtendedTextShape })
+])
+
+/** Минимум, без которого запись не показать; всё остальное проверяет `journalMessageSchema` */
+export const journalEnvelopeSchema = z.array(
+  z.looseObject({
+    type: z.enum(["incoming", "outgoing"]),
+    idMessage: idMessageSchema,
+    timestamp: timestampSchema,
+    chatId: z.string(),
+    typeMessage: z.string()
+  })
+)
+
+/** Медиа, реакции и прочее вне скоупа: нестрогая, как `unsupportedMessageDataSchema` */
+const journalUnsupportedMessageSchema = z.looseObject({
+  type: z.enum(["incoming", "outgoing"]),
+  idMessage: idMessageSchema,
+  timestamp: timestampSchema,
+  chatId: z.string(),
+  typeMessage: z.string().check(z.refine(isNotTextType))
+})
+
+export const journalMessageSchema = z.union([
+  journalTextMessageSchema,
+  journalUnsupportedMessageSchema
+])
+
 export type TMessageData = z.infer<typeof messageDataSchema>
 export type TWebhook = z.infer<typeof webhookSchema>
 export type TOutgoingMessageStatus = Extract<
@@ -202,3 +295,30 @@ export type TOutgoingMessageStatus = Extract<
 export type TUnknownWebhook = { typeWebhook: "unknown"; original: string; reason: string }
 
 export type TNotification = { receiptId: number; body: TWebhook | TUnknownWebhook }
+
+export type TJournalEnvelope = z.infer<typeof journalEnvelopeSchema>[number]
+export type TJournalTextMessage = z.infer<typeof journalTextMessageSchema>
+
+/** Запись журнала, не прошедшая схему: показывается как неподдерживаемая, дрейф уже залогирован */
+type TUnknownJournalMessage = {
+  type: TJournalEnvelope["type"]
+  idMessage: string
+  timestamp: number
+  chatId: string
+  typeMessage: "unknown"
+  original: string
+}
+
+export type TJournalMessage = z.infer<typeof journalMessageSchema> | TUnknownJournalMessage
+
+type TTextMessageData = z.infer<typeof textMessageDataSchema | typeof extendedTextMessageDataSchema>
+
+/**
+ * У нестрогих веток `typeMessage: string`, поэтому сравнение с литералом тип не сужает.
+ * Guard надёжен: схемы запрещают нестрогим веткам текстовые `typeMessage`.
+ */
+export const isTextMessageData = (data: TMessageData): data is TTextMessageData =>
+  TEXT_MESSAGE_TYPES.includes(data.typeMessage)
+
+export const isJournalTextMessage = (message: TJournalMessage): message is TJournalTextMessage =>
+  TEXT_MESSAGE_TYPES.includes(message.typeMessage)

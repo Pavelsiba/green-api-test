@@ -1,0 +1,12 @@
+.status {
+  flex-shrink: 0;
+  color: var(--bubbles-icon-read-status, var(--icon-tertiary));
+
+  &[data-tone="read"] {
+    color: var(--icon-themed);
+  }
+
+  &[data-tone="error"] {
+    color: var(--icon-negative);
+  }
+}

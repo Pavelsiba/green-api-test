@@ -356,3 +356,119 @@ describe("transport failures", () => {
     await expect(greenApi.receiveNotification()).rejects.toBe(abort)
   })
 })
+
+// Journal shapes copied from live responses on 2026-09-26, personal values replaced
+const journalIncomingText = {
+  type: "incoming",
+  idMessage: "A5D2E81F0D3B4C6A9E7F1B2C3D4E5F60",
+  timestamp: 1790000100,
+  typeMessage: "textMessage",
+  chatId: "79001234567@c.us",
+  textMessage: "привет",
+  senderId: "79001234567@c.us",
+  senderName: "Test",
+  senderContactName: "Test",
+  deletedMessageId: "",
+  editedMessageId: "",
+  isEdited: false,
+  isDeleted: false,
+  isRead: true,
+  isReadTimestamp: 1790000200
+}
+const journalOutgoingExtended = {
+  type: "outgoing",
+  idMessage: "3EB0859A4E2E1EDB8C4582",
+  timestamp: 1790000000,
+  typeMessage: "extendedTextMessage",
+  chatId: "79001234567@c.us",
+  textMessage: "тест",
+  extendedTextMessage: outgoingApiText.messageData.extendedTextMessageData,
+  statusMessage: "read",
+  sendByApi: true,
+  deletedMessageId: "",
+  editedMessageId: "",
+  isEdited: false,
+  isDeleted: false
+}
+const journalOutgoingImage = {
+  type: "outgoing",
+  idMessage: "3EB0AAAA4E2E1EDB8C4599",
+  timestamp: 1789999000,
+  typeMessage: "imageMessage",
+  chatId: "79001234567@c.us",
+  downloadUrl: "https://example.com/file.jpg",
+  caption: "",
+  fileName: "file.jpg",
+  jpegThumbnail: "",
+  mimeType: "image/jpeg",
+  isAnimated: false,
+  isForwarded: false,
+  forwardingScore: 0,
+  statusMessage: "delivered",
+  sendByApi: false,
+  editedMessageId: "",
+  deletedMessageId: "",
+  videoNote: false,
+  isEdited: false,
+  isDeleted: false
+}
+
+describe("getChatHistory", () => {
+  it("posts chatId and count and keeps text and media entries", async () => {
+    const fetchMock = mockFetch(
+      JSON.stringify([journalIncomingText, journalOutgoingExtended, journalOutgoingImage])
+    )
+
+    const history = await greenApi.getChatHistory({ chatId: "79001234567@c.us", count: 50 })
+
+    expect(fetchMock.mock.calls[0]?.[0]).toContain("/getChatHistory/tkn")
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
+      chatId: "79001234567@c.us",
+      count: 50
+    })
+    expect(history.map((message) => message.typeMessage)).toEqual([
+      "textMessage",
+      "extendedTextMessage",
+      "imageMessage"
+    ])
+  })
+
+  it("turns a broken text entry into unknown instead of failing the whole history", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const { textMessage: _dropped, ...broken } = journalIncomingText
+    mockFetch(JSON.stringify([broken, journalOutgoingExtended]))
+
+    const history = await greenApi.getChatHistory({ chatId: "79001234567@c.us", count: 50 })
+
+    expect(history[0]).toMatchObject({ typeMessage: "unknown", original: "textMessage" })
+    expect(history[1]?.typeMessage).toBe("extendedTextMessage")
+    expect(warn).toHaveBeenCalledOnce()
+    warn.mockRestore()
+  })
+
+  it("fails as badResponse when an entry has no idMessage", async () => {
+    const { idMessage: _dropped, ...broken } = journalIncomingText
+    mockFetch(JSON.stringify([broken]))
+
+    const error = await apiError(greenApi.getChatHistory({ chatId: "79001234567@c.us", count: 1 }))
+
+    expect(error.kind).toBe("badResponse")
+  })
+})
+
+describe("lastIncomingMessages / lastOutgoingMessages", () => {
+  it("passes minutes as a query parameter after the token", async () => {
+    const fetchMock = mockFetch(JSON.stringify([journalIncomingText]))
+
+    await greenApi.lastIncomingMessages({ minutes: 10080 })
+
+    expect(fetchMock.mock.calls[0]?.[0]).toMatch(/\/lastIncomingMessages\/tkn\?minutes=10080$/)
+  })
+
+  it("defaults to one day", async () => {
+    const fetchMock = mockFetch("[]")
+
+    expect(await greenApi.lastOutgoingMessages()).toEqual([])
+    expect(fetchMock.mock.calls[0]?.[0]).toMatch(/\?minutes=1440$/)
+  })
+})

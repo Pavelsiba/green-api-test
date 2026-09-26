@@ -2,16 +2,42 @@ import { greenApiInstance } from "./api-instance"
 import {
   checkWhatsappResponseSchema,
   deleteNotificationResponseSchema,
+  journalEnvelopeSchema,
+  journalMessageSchema,
   notificationEnvelopeSchema,
   sendMessageResponseSchema,
   stateInstanceResponseSchema,
   type TCredentials,
+  type TJournalEnvelope,
+  type TJournalMessage,
   type TNotification,
   webhookSchema
 } from "./schemas"
 import { validate } from "./validate"
 
-export type TCheckWhatsappResult = { exists: true; chatId: string } | { exists: false }
+/**
+ * Запись, не прошедшая схему, становится `unknown`, а не ошибкой всего списка:
+ * одно странное сообщение не должно прятать историю чата.
+ */
+function parseJournalMessage(envelope: TJournalEnvelope, method: string): TJournalMessage {
+  const result = validate(journalMessageSchema, envelope, `${method} ${envelope.typeMessage}`)
+  if (result.ok) return result.data
+  console.warn(`${result.reason}
+(message will be shown as unsupported)`)
+  const { type, idMessage, timestamp, chatId } = envelope
+  return {
+    type,
+    idMessage,
+    timestamp,
+    chatId,
+    typeMessage: "unknown",
+    original: envelope.typeMessage
+  }
+}
+
+const JOURNAL_DAY_MINUTES = 1440
+
+type TCheckWhatsappResult = { exists: true; chatId: string } | { exists: false }
 
 /**
  * Транспорт GREEN-API: методы без знания о кэше. Ключи и `queryOptions`
@@ -51,8 +77,60 @@ export const greenApi = {
       json: { chatId, message }
     }),
 
+  /** Последние сообщения чата, от новых к старым (так отдаёт сервер) */
+  getChatHistory: async ({
+    chatId,
+    count,
+    signal
+  }: {
+    chatId: string
+    count: number
+    signal?: AbortSignal
+  }) => {
+    const data = await greenApiInstance("getChatHistory", {
+      schema: journalEnvelopeSchema,
+      method: "POST",
+      json: { chatId, count },
+      signal
+    })
+    return data.map((envelope) => parseJournalMessage(envelope, "getChatHistory"))
+  },
+
+  /** Входящие за `minutes` (по умолчанию сутки), включая группы */
+  lastIncomingMessages: async ({
+    minutes = JOURNAL_DAY_MINUTES,
+    signal
+  }: {
+    minutes?: number
+    signal?: AbortSignal
+  } = {}) => {
+    const data = await greenApiInstance("lastIncomingMessages", {
+      schema: journalEnvelopeSchema,
+      path: `?minutes=${minutes}`,
+      signal
+    })
+    return data.map((envelope) => parseJournalMessage(envelope, "lastIncomingMessages"))
+  },
+
+  /** Исходящие за `minutes` (по умолчанию сутки): и с телефона, и через API */
+  lastOutgoingMessages: async ({
+    minutes = JOURNAL_DAY_MINUTES,
+    signal
+  }: {
+    minutes?: number
+    signal?: AbortSignal
+  } = {}) => {
+    const data = await greenApiInstance("lastOutgoingMessages", {
+      schema: journalEnvelopeSchema,
+      path: `?minutes=${minutes}`,
+      signal
+    })
+    return data.map((envelope) => parseJournalMessage(envelope, "lastOutgoingMessages"))
+  },
+
   /**
-   * `null` — очередь пуста. Сервер отвечает сразу, long-polling нет.
+   * `null` — очередь пуста. Это long-polling: пустой ответ сервер держит ~5 с (receiveTimeout),
+   * параллельный второй запрос висит ~10 с и получает 408 — опрашивать строго по одному.
    * Тело, не прошедшее схему, становится `unknown`, а не исключением:
    * вызывающий обязан его удалить, иначе очередь вернёт его снова.
    */

@@ -1,0 +1,115 @@
+/* Фон чата MAX (тема space): градиент --chat-background-background-step-1 → step-2 */
+.window {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  background: linear-gradient(
+    160deg,
+    var(--chat-background-background-step-1) 0%,
+    var(--chat-background-background-step-2) 100%
+  );
+}
+
+.header {
+  display: flex;
+  flex-shrink: 0;
+  gap: 12px;
+  align-items: center;
+  height: 64px;
+  padding: 0 16px;
+  background: var(--background-primary);
+  box-shadow: 0 1px 0 var(--divider-secondary);
+}
+
+/* «Назад» нужен только на мобильной ширине, где список и чат — разные экраны */
+.back {
+  display: none;
+  margin-right: -4px;
+
+  @media (max-width: 925.9px) {
+    display: inline-flex;
+  }
+}
+
+.headerText {
+  min-width: 0;
+}
+
+/* title MAX: 17/24, 600 */
+.headerTitle {
+  margin: 0;
+  overflow: hidden;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 22px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--text-primary);
+}
+
+.headerSubtitle {
+  margin: 0;
+  font-size: 13px;
+  line-height: 16px;
+  letter-spacing: 0.2px;
+  color: var(--text-tertiary);
+}
+
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Колонка сообщений MAX: до 740px по центру */
+.feed {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  max-width: 740px;
+  min-height: 100%;
+  margin: 0 auto;
+  padding: 8px 24px;
+
+  @media (max-width: 925.9px) {
+    padding-inline: 12px;
+  }
+}
+
+.composer {
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 788px;
+  margin: 0 auto;
+  padding: 8px 24px 24px;
+
+  @media (max-width: 925.9px) {
+    padding: 8px 12px 16px;
+  }
+}
+
+.state {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+/* Подсказки на фоне чата — капсулой, как разделители дней */
+.capsuleText {
+  margin: 0;
+  padding: 4px 12px;
+  border-radius: 10px;
+  background: var(--capsule-outside);
+  backdrop-filter: blur(25px);
+  font-size: 15px;
+  line-height: 20px;
+  text-align: center;
+  color: #fff;
+}

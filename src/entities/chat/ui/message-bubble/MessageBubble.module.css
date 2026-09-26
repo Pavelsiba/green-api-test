@@ -1,0 +1,71 @@
+.row {
+  display: flex;
+  margin-bottom: 2px;
+
+  &[data-last] {
+    margin-bottom: 8px;
+  }
+
+  &[data-direction="outgoing"] {
+    justify-content: flex-end;
+  }
+}
+
+.bubble {
+  max-width: min(480px, 80%);
+  padding: 6px 10px 6px 12px;
+  border-radius: 16px;
+  background: var(--bubbles-background-bubble);
+  color: var(--bubbles-text-body);
+
+  .row[data-last][data-direction="incoming"] & {
+    border-bottom-left-radius: 6px;
+  }
+
+  .row[data-last][data-direction="outgoing"] & {
+    border-bottom-right-radius: 6px;
+  }
+}
+
+/* body MAX: 16/20 */
+.text {
+  margin: 0;
+  font-size: 16px;
+  line-height: 20px;
+  letter-spacing: 0.15px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+  &[data-unsupported] {
+    font-style: italic;
+    color: var(--bubbles-text-body-secondary);
+  }
+}
+
+/*
+ * Время обтекается текстом: если последней строке хватает места — стоит в ней справа,
+ * иначе переносится на свою строку. bubble-label MAX: 12/16.
+ */
+.meta {
+  position: relative;
+  top: 5px;
+  display: inline-flex;
+  float: right;
+  gap: 2px;
+  align-items: center;
+  margin-left: 8px;
+  font-size: 12px;
+  font-style: normal;
+  line-height: 16px;
+  letter-spacing: 0.2px;
+  color: var(--bubbles-text-time);
+  user-select: none;
+}
+
+/*
+ * В пузыре «прочитано» — цвет пузыря MAX (--bubbles-icon-read-status), а не синий из списка:
+ * на фиолетовом исходящем в тёмной теме синий не читается. Прочитанное отличают две галочки.
+ */
+.bubble .meta [data-tone="read"] {
+  color: var(--bubbles-icon-read-status);
+}

@@ -1,0 +1,24 @@
+.form {
+  padding: 0 16px;
+}
+
+/* поиск MAX: 40px, заливка --background-tertiary, радиус 12; .form — чтобы перебить 52px из темы */
+.form .input {
+  --input-height: 40px;
+
+  border-radius: 12px;
+}
+
+/* description MAX 13/16; высота зарезервирована под одну строку */
+.error {
+  min-height: 16px;
+  margin: 4px 0 0;
+  padding-inline: 12px;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 16px;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--text-negative);
+}

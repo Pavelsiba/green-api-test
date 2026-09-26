@@ -1,9 +1,17 @@
 /* Как экран входа web.max.ru: колонка по центру на фоне --background-secondary, без карточки */
 .page {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100%;
   padding: 24px 16px;
   background: var(--background-secondary);
+}
+
+/* Как иконки в углах экрана входа web.max.ru */
+.corner {
+  position: absolute;
+  top: 12px;
+  right: 12px;
 }

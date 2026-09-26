@@ -6,6 +6,11 @@
 
 :root,
 :root[data-mantine-color-scheme="light"] {
+  --float-primary-flat: #fff;
+  --capsule-outside: #0f8ec285;
+  --shadow-elevation-3-primary: #00000014;
+  --shadow-elevation-3-secondary: #00000014;
+  --states-background-card-selected-hover: #007aff14;
   --background-surface: #edeef2;
   --background-primary: #fff;
   --background-secondary: #f5f7fa;
@@ -70,6 +75,11 @@
 }
 
 :root[data-mantine-color-scheme="dark"] {
+  --float-primary-flat: #17181c;
+  --capsule-outside: #282c42b2;
+  --shadow-elevation-3-primary: #0000004d;
+  --shadow-elevation-3-secondary: #0000004d;
+  --states-background-card-selected-hover: #2c2d37;
   --background-surface: #0f0f12;
   --background-primary: #17181c;
   --background-secondary: #25262d;

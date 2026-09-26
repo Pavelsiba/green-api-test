@@ -1,0 +1,40 @@
+/* composer MAX: --float-primary-flat, радиус 16, тень elevation-3 */
+.composer {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  padding: 6px 6px 6px 4px;
+  border-radius: 16px;
+  background: var(--float-primary-flat);
+  box-shadow:
+    0 4px 16px 0 var(--shadow-elevation-3-primary),
+    0 0 2px 0 var(--shadow-elevation-3-secondary);
+}
+
+.field {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Поле внутри карточки без своей заливки; .composer — чтобы перебить 52px из темы */
+.composer .input {
+  --input-height: 40px;
+  --input-bg: transparent;
+  --input-bd-focus: transparent;
+
+  min-height: 40px;
+  padding-block: 10px;
+  font-size: 16px;
+  line-height: 20px;
+  color: var(--writebar-input-text);
+}
+
+.send {
+  flex-shrink: 0;
+
+  &:disabled,
+  &[data-disabled] {
+    background: transparent;
+    color: var(--icon-mute);
+  }
+}

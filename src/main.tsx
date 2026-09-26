@@ -1,7 +1,6 @@
 import { MantineProvider } from "@mantine/core"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
-import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import "@mantine/core/styles.css"
 import "@/app/styles/index.css"
@@ -13,16 +12,14 @@ const root = document.getElementById("root")
 if (!root) throw new Error("#root not found")
 
 createRoot(root).render(
-  <StrictMode>
-    <MantineProvider
-      theme={theme}
-      cssVariablesResolver={cssVariablesResolver}
-      defaultColorScheme="auto"
-    >
-      <QueryClientProvider client={queryClient}>
-        <App />
-        <ReactQueryDevtools />
-      </QueryClientProvider>
-    </MantineProvider>
-  </StrictMode>
+  <MantineProvider
+    theme={theme}
+    cssVariablesResolver={cssVariablesResolver}
+    defaultColorScheme="auto"
+  >
+    <QueryClientProvider client={queryClient}>
+      <App />
+      <ReactQueryDevtools />
+    </QueryClientProvider>
+  </MantineProvider>
 )

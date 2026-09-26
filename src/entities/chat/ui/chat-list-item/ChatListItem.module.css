@@ -1,0 +1,111 @@
+/* Ячейка чата MAX: радиус 16, отступы 8/12, зазор 12, hover/selected из --states-background-card-* */
+.item {
+  display: grid;
+  grid-template-areas:
+    "avatar title time"
+    "avatar text unread";
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  column-gap: 12px;
+  row-gap: 2px;
+  align-items: center;
+  width: 100%;
+  min-height: 68px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  & > :first-child {
+    grid-area: avatar;
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      background: var(--states-background-card-hover);
+    }
+  }
+
+  &:active {
+    background: var(--states-background-card-pressed);
+  }
+
+  &[data-selected] {
+    background: var(--states-background-card-selected);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--stroke-themed);
+    outline-offset: -2px;
+  }
+}
+
+/* body strong MAX: 16/20, 500 */
+.title {
+  grid-area: title;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: 0.15px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* label MAX: 12/16 */
+.time {
+  grid-area: time;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.3px;
+  color: var(--text-tertiary);
+}
+
+/* detail MAX: 15/20 */
+.text {
+  display: flex;
+  grid-area: text;
+  gap: 4px;
+  align-items: center;
+  min-width: 0;
+  font-size: 15px;
+  line-height: 20px;
+  letter-spacing: 0.15px;
+  color: var(--text-secondary);
+
+  &[data-empty] {
+    color: var(--text-tertiary);
+  }
+}
+
+.textContent {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.unread {
+  grid-area: unread;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--counter-themed);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 20px;
+  text-align: center;
+  color: #fff;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
