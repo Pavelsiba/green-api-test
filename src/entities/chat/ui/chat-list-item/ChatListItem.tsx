@@ -4,17 +4,17 @@ import { ChatAvatar } from "../chat-avatar/ChatAvatar"
 import { MessageStatus } from "../message-status/MessageStatus"
 import cls from "./ChatListItem.module.css"
 
+type TChatListItemProps = {
+  chat: TChatPreview
+  selected: boolean
+  onSelect: (chatId: string) => void
+}
+
 const getPreviewText = (message: TMessage | null) => {
   if (!message) return "Нет сообщений"
   return message.content.type === "text"
     ? message.content.text
     : getUnsupportedLabel(message.content.typeMessage)
-}
-
-type TChatListItemProps = {
-  chat: TChatPreview
-  selected: boolean
-  onSelect: (chatId: string) => void
 }
 
 /** Строка списка чатов MAX: аватар 52px, имя, последнее сообщение, время, непрочитанные */

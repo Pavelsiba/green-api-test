@@ -7,7 +7,31 @@ import type { TChatPreview, TMessage, TMessageStatus } from "../model/types"
  * приходят не по порядку, а `failed` и прочие ошибки финальны.
  */
 
+const STATUS_RANK: Record<TMessageStatus, number> = {
+  sending: 0,
+  pending: 1,
+  sent: 2,
+  delivered: 3,
+  read: 4,
+  failed: 5,
+  noAccount: 5,
+  notInGroup: 5
+}
+
 const byTimestamp = (left: TMessage, right: TMessage) => left.timestamp - right.timestamp
+
+const byLastMessage = (left: TChatPreview, right: TChatPreview) =>
+  (right.lastMessage?.timestamp ?? Number.POSITIVE_INFINITY) -
+  (left.lastMessage?.timestamp ?? Number.POSITIVE_INFINITY)
+
+function pickLaterStatus(
+  current: TMessageStatus | undefined,
+  next: TMessageStatus | undefined
+): TMessageStatus | undefined {
+  if (!current) return next
+  if (!next) return current
+  return STATUS_RANK[next] >= STATUS_RANK[current] ? next : current
+}
 
 export function upsertMessage(messages: readonly TMessage[], message: TMessage): TMessage[] {
   const existing = messages.find((item) => item.id === message.id)
@@ -39,30 +63,6 @@ export const setMessageStatus = (
   messages.map((item) =>
     item.id === id ? { ...item, status: pickLaterStatus(item.status, status) } : item
   )
-
-const STATUS_RANK: Record<TMessageStatus, number> = {
-  sending: 0,
-  pending: 1,
-  sent: 2,
-  delivered: 3,
-  read: 4,
-  failed: 5,
-  noAccount: 5,
-  notInGroup: 5
-}
-
-function pickLaterStatus(
-  current: TMessageStatus | undefined,
-  next: TMessageStatus | undefined
-): TMessageStatus | undefined {
-  if (!current) return next
-  if (!next) return current
-  return STATUS_RANK[next] >= STATUS_RANK[current] ? next : current
-}
-
-const byLastMessage = (left: TChatPreview, right: TChatPreview) =>
-  (right.lastMessage?.timestamp ?? Number.POSITIVE_INFINITY) -
-  (left.lastMessage?.timestamp ?? Number.POSITIVE_INFINITY)
 
 export const sortChats = (chats: readonly TChatPreview[]) => [...chats].sort(byLastMessage)
 

@@ -3,9 +3,6 @@ import { chatIdFromHash, hashFromChatId } from "../lib/chat-hash"
 
 const OPENED_BY_APP = "chatOpenedByApp"
 
-const readHashChatId = () => chatIdFromHash(window.location.hash)
-const urlWithoutHash = () => window.location.pathname + window.location.search
-
 const hashChatIdAtom = atom(readHashChatId())
 
 hashChatIdAtom.onMount = (setChatId) => {
@@ -16,6 +13,14 @@ hashChatIdAtom.onMount = (setChatId) => {
     window.removeEventListener("popstate", sync)
     window.removeEventListener("hashchange", sync)
   }
+}
+
+function readHashChatId() {
+  return chatIdFromHash(window.location.hash)
+}
+
+function urlWithoutHash() {
+  return window.location.pathname + window.location.search
 }
 
 /**

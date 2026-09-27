@@ -7,7 +7,7 @@ import {
 } from "@/shared/api"
 import type { TMessage, TMessageContent } from "../model/types"
 
-type TMessageWebhook = Extract<
+export type TMessageWebhook = Extract<
   TWebhook,
   {
     typeWebhook:
@@ -59,5 +59,3 @@ export function webhookToMessage(webhook: TMessageWebhook): TMessage {
     status: isIncoming ? undefined : "sent"
   }
 }
-
-export type { TMessageWebhook }

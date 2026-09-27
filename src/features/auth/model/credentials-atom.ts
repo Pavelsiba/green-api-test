@@ -10,13 +10,6 @@ const STORAGE_KEY = "green-api-credentials"
 
 const jsonStorage = createJSONStorage<unknown>(() => localStorage)
 
-const parseStored = (value: unknown): TStoredCredentials => {
-  if (value === null) return null
-  const result = credentialsSchema.safeParse(value)
-  if (!result.success) console.warn("Stored credentials are invalid and were ignored")
-  return result.success ? result.data : null
-}
-
 const transportSyncedStorage: TSyncStorage<TStoredCredentials> = {
   getItem: (key) => {
     const credentials = parseStored(jsonStorage.getItem(key, null))
@@ -41,6 +34,13 @@ const transportSyncedStorage: TSyncStorage<TStoredCredentials> = {
       },
       null
     )
+}
+
+const parseStored = (value: unknown): TStoredCredentials => {
+  if (value === null) return null
+  const result = credentialsSchema.safeParse(value)
+  if (!result.success) console.warn("Stored credentials are invalid and were ignored")
+  return result.success ? result.data : null
 }
 
 /**

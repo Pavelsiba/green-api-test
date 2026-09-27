@@ -3,14 +3,14 @@ import { greenApi } from "@/shared/api"
 import { getPollInterval } from "../lib/get-poll-interval"
 import { applyNotification } from "../model/apply-notification"
 
-const notificationQueryKeys = {
-  all: ["notifications"] as const,
-  next: () => [...notificationQueryKeys.all, "next"] as const
-}
-
 type TPollingContext = {
   queryClient: QueryClient
   getSelectedChatId: () => string | null
+}
+
+const notificationQueryKeys = {
+  all: ["notifications"] as const,
+  next: () => [...notificationQueryKeys.all, "next"] as const
 }
 
 /**

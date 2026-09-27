@@ -14,12 +14,6 @@ type TWebhookHandlers = {
   ) => void
 }
 
-const applyOutgoing = (webhook: TMessageWebhook, { queryClient }: TNotificationContext) =>
-  chatCache.addMessage(queryClient, webhookToMessage(webhook), {
-    name: webhook.senderData.chatName,
-    unread: false
-  })
-
 const WEBHOOK_HANDLERS: TWebhookHandlers = {
   incomingMessageReceived: (webhook, { queryClient, selectedChatId }) => {
     const { chatId, senderContactName, senderName } = webhook.senderData
@@ -34,6 +28,13 @@ const WEBHOOK_HANDLERS: TWebhookHandlers = {
     chatCache.setStatus(queryClient, chatId, idMessage, status),
   stateInstanceChanged: ({ stateInstance }) =>
     console.warn(`Instance state changed: ${stateInstance}`)
+}
+
+function applyOutgoing(webhook: TMessageWebhook, { queryClient }: TNotificationContext) {
+  chatCache.addMessage(queryClient, webhookToMessage(webhook), {
+    name: webhook.senderData.chatName,
+    unread: false
+  })
 }
 
 /**
