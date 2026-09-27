@@ -296,6 +296,24 @@ describe("receiveNotification", () => {
   })
 
   it.each([
+    [
+      "sender data",
+      { ...incomingText, senderData: { ...senderData, chatId: "120363@g.us" } },
+      "[webhook incomingMessageReceived 120363@g.us] validation failed"
+    ],
+    [
+      "the top level",
+      { ...statusRead, chatId: "123@lid" },
+      "[webhook outgoingMessageStatus 123@lid] validation failed"
+    ]
+  ])("names the chat from %s in the warning", async (_label, body, expected) => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    mockFetch(JSON.stringify({ receiptId: 9, body }))
+    await greenApi.receiveNotification()
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining(expected))
+  })
+
+  it.each([
     ["at the top level", { ...statusRead, newServerField: 1 }],
     [
       "inside a union branch (text message data)",

@@ -35,6 +35,18 @@ function parseJournalMessage(envelope: TJournalEnvelope, method: string): TJourn
   }
 }
 
+/**
+ * chatId из сырого вебхука — только для текста предупреждения: по нему видно, чей вебхук
+ * отброшен (группа `@g.us` или личный `@lid`). У статусов он в корне, у сообщений — в senderData.
+ */
+function readWebhookChatId(body: Record<string, unknown>): string | undefined {
+  const { chatId, senderData } = body
+  if (typeof chatId === "string") return chatId
+  if (typeof senderData !== "object" || senderData === null) return undefined
+  const senderChatId = (senderData as Record<string, unknown>).chatId
+  return typeof senderChatId === "string" ? senderChatId : undefined
+}
+
 const JOURNAL_DAY_MINUTES = 1440
 
 type TCheckWhatsappResult = { exists: true; chatId: string } | { exists: false }
@@ -142,7 +154,9 @@ export const greenApi = {
     })
     if (!envelope) return null
 
-    const body = validate(webhookSchema, envelope.body, `webhook ${envelope.body.typeWebhook}`)
+    const chatId = readWebhookChatId(envelope.body)
+    const context = `webhook ${envelope.body.typeWebhook}${chatId ? ` ${chatId}` : ""}`
+    const body = validate(webhookSchema, envelope.body, context)
     if (!body.ok) console.warn(`${body.reason}\n(notification will be deleted)`)
     return {
       receiptId: envelope.receiptId,
