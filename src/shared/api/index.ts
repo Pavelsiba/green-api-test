@@ -3,6 +3,7 @@ export {
   greenApi,
   isJournalTextMessage,
   isTextMessageData,
+  isUnauthorizedError,
   setCredentials,
   type TApiErrorKind,
   type TCredentials,

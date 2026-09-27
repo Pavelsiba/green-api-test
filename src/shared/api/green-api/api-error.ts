@@ -30,6 +30,10 @@ export class ApiError extends Error {
   }
 }
 
+/** Креды не действуют: неверный или перевыпущенный токен, удалённый инстанс, кредов нет */
+export const isUnauthorizedError = (error: unknown): boolean =>
+  error instanceof ApiError && error.error.kind === "unauthorized"
+
 /** Повторять имеет смысл только временные сбои. Повтор 469 — ровно то, за что включается антифрод. */
 export const isTransientError = (error: unknown): boolean =>
   !(error instanceof ApiError) ||

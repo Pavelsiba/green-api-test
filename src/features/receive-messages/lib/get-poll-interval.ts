@@ -1,4 +1,4 @@
-import { ApiError } from "@/shared/api"
+import { isUnauthorizedError } from "@/shared/api"
 
 /**
  * Пауза между опросами. Пустой ответ сервер и так держит ~5 с (long-polling), а тик интервала
@@ -10,6 +10,6 @@ const ERROR_INTERVAL_MS = 5000
 
 /** `false` — опрос остановлен: креды отозваны, повторять бессмысленно */
 export function getPollInterval(error: unknown): number | false {
-  if (error instanceof ApiError && error.error.kind === "unauthorized") return false
+  if (isUnauthorizedError(error)) return false
   return error ? ERROR_INTERVAL_MS : POLL_INTERVAL_MS
 }
