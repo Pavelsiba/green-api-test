@@ -5,18 +5,16 @@ import { journalToMessage } from "./to-message"
 
 const PERSONAL_CHAT_SUFFIX = "@c.us"
 
-const readString = (message: TJournalMessage, key: string): string | null => {
-  const value: unknown = (message as Record<string, unknown>)[key]
-  return typeof value === "string" && value !== "" ? value : null
+const toName = (value: unknown) => (typeof value === "string" && value !== "" ? value : null)
+
+const getSenderName = (message: TJournalMessage) => {
+  if (message.type !== "incoming") return null
+  const contactName = "senderContactName" in message ? toName(message.senderContactName) : null
+  return contactName ?? ("senderName" in message ? toName(message.senderName) : null)
 }
 
-const getSenderName = (message: TJournalMessage) =>
-  message.type === "incoming"
-    ? (readString(message, "senderContactName") ?? readString(message, "senderName"))
-    : null
-
 const isUnread = (message: TJournalMessage) =>
-  message.type === "incoming" && (message as Record<string, unknown>).isRead === false
+  message.type === "incoming" && "isRead" in message && message.isRead === false
 
 /**
  * Список чатов из последних входящих и исходящих. Отдельного метода «чаты с последним
