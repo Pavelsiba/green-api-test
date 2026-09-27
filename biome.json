@@ -24,6 +24,12 @@
       }
     }
   },
+  "overrides": [
+    {
+      "includes": ["src/app/styles/theme.module.css"],
+      "linter": { "rules": { "complexity": { "noImportantStyles": "off" } } }
+    }
+  ],
   "javascript": {
     "formatter": {
       "quoteStyle": "double",

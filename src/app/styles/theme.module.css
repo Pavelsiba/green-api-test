@@ -34,6 +34,10 @@
   font-weight: 500;
   letter-spacing: 0.15px;
 
+  &::before {
+    display: none;
+  }
+
   &:where(:not([data-variant]), [data-variant="filled"]):not(
       :disabled,
       [data-disabled],
@@ -56,4 +60,17 @@
     background: var(--states-button-primary-disabled);
     color: rgb(255 255 255 / 72%);
   }
+}
+
+.buttonInner {
+  transition: opacity 150ms ease;
+
+  .button[data-loading] & {
+    opacity: 0;
+    transform: none;
+  }
+}
+
+.buttonLoader {
+  transform: translate(-50%, -50%) !important;
 }

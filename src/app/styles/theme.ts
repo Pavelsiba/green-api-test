@@ -28,6 +28,8 @@ const max: MantineColorsTuple = [
  * `cssVariablesResolver` ссылаются на токены из `max-tokens.css`, поэтому тёмная схема
  * переключается сама вместе с `data-mantine-color-scheme`. Основной оттенок шкалы `max` —
  * `#0066d6`, темнее MAX `#007aff`: белый текст кнопки даёт 5.42:1 (WCAG AA) вместо 4.02:1.
+ * У `Button` в `loading` текст гаснет, а лоадер проявляется на месте, без выезда и белой подложки
+ * Mantine; `transform` лоадера Mantine пишет инлайн, поэтому в CSS он с `!important`.
  */
 export const theme = createTheme({
   primaryColor: "max",
@@ -43,7 +45,9 @@ export const theme = createTheme({
     InputWrapper: InputWrapper.extend({
       classNames: { label: cls.label, error: cls.hint, description: cls.hint }
     }),
-    Button: Button.extend({ classNames: { root: cls.button } })
+    Button: Button.extend({
+      classNames: { root: cls.button, inner: cls.buttonInner, loader: cls.buttonLoader }
+    })
   }
 })
 
