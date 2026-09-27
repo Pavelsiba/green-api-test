@@ -1,5 +1,6 @@
 import { Button, Loader } from "@mantine/core"
 import { useQuery } from "@tanstack/react-query"
+import { useEffect, useRef } from "react"
 import {
   ChatListItem,
   chatListQueryOptions,
@@ -9,17 +10,29 @@ import {
 import { LogoutButton } from "@/features/auth"
 import { StartChatForm } from "@/features/start-chat"
 import { ThemeSwitcher } from "@/features/theme-switcher"
+import { isFocusLost } from "@/shared/lib"
 import cls from "./ChatSidebar.module.css"
 
 function ChatList() {
   const { data: chats, isPending, isError, refetch } = useQuery(chatListQueryOptions())
   const selectedChatId = useSelectedChatId()
   const selectChat = useSelectChat()
+  const listRef = useRef<HTMLElement>(null)
+  const lastSelectedRef = useRef(selectedChatId)
+
+  useEffect(() => {
+    const previousChatId = lastSelectedRef.current
+    lastSelectedRef.current = selectedChatId
+    if (selectedChatId || !previousChatId || !isFocusLost()) return
+    listRef.current
+      ?.querySelector<HTMLElement>(`[data-chat-id="${CSS.escape(previousChatId)}"]`)
+      ?.focus()
+  }, [selectedChatId])
 
   if (isPending) {
     return (
       <div className={cls.state}>
-        <Loader size="sm" />
+        <Loader size="sm" role="status" aria-label="Загрузка чатов" />
       </div>
     )
   }
@@ -44,7 +57,7 @@ function ChatList() {
   }
 
   return (
-    <nav className={cls.list} aria-label="Чаты">
+    <nav ref={listRef} className={cls.list} aria-label="Чаты">
       {chats.map((chat) => (
         <ChatListItem
           key={chat.chatId}
@@ -57,7 +70,10 @@ function ChatList() {
   )
 }
 
-/** Левая колонка MAX: заголовок, поле нового чата, список чатов */
+/**
+ * Левая колонка MAX: заголовок, поле нового чата, список чатов. На узкой ширине после «назад»
+ * потерянный фокус возвращается на строку чата, из которого вышли.
+ */
 export function ChatSidebar() {
   return (
     <aside className={cls.sidebar}>

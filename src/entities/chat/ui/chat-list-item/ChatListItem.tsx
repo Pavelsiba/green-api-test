@@ -26,6 +26,7 @@ export function ChatListItem({ chat, selected, onSelect }: TChatListItemProps) {
     <button
       type="button"
       className={cls.item}
+      data-chat-id={chat.chatId}
       data-selected={selected || undefined}
       aria-current={selected || undefined}
       onClick={() => onSelect(chat.chatId)}

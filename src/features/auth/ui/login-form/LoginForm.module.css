@@ -24,7 +24,8 @@
 
 .link {
   color: var(--text-themed);
-  text-decoration: none;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 /* 22px = отступ 6px + строка подсказки 16px: место есть всегда, ошибка его только заполняет */

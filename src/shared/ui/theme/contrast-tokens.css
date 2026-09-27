@@ -1,0 +1,37 @@
+/*
+ * Поправки палитры MAX под WCAG AA (контраст текста ≥ 4.5:1), подключаются после max-tokens.css.
+ * Сам max-tokens.css остаётся точным слепком MAX; здесь только цвета, которые у MAX не проходят.
+ * В комментариях — исходное значение MAX и контраст до → после.
+ */
+
+:root[data-mantine-color-scheme="light"] {
+  /* #007aff: 3.74 → 5.05 на фоне формы */
+  --text-themed: #0066d6;
+  /* #06070885: 3.95 → 5.15 на hover строки списка */
+  --text-tertiary: #06070899;
+  /* #479fff / #006ee5: белый текст на hover 2.74 → 4.81, на pressed 4.81 → 6.67 */
+  --states-button-primary-hover: #006ee5;
+  --states-button-primary-pressed: #0059bb;
+}
+
+:root[data-mantine-color-scheme="dark"] {
+  /* #007aff: 3.75 → 5.50 на фоне формы */
+  --text-themed: #479fff;
+  --states-button-primary-hover: #006ee5;
+  --states-button-primary-pressed: #0059bb;
+}
+
+:root [data-bubbles-variant="incoming"] {
+  /* #06070885: 4.08 → 5.40 на белом пузыре */
+  --bubbles-text-time: #06070899;
+}
+
+:root [data-bubbles-variant="outgoing"] {
+  /* #0784b8: 3.99 → 5.10 */
+  --bubbles-text-time: #06729f;
+}
+
+:root[data-mantine-color-scheme="dark"] [data-bubbles-variant="outgoing"] {
+  /* #ffffffa3: 2.83 → 4.57, как у текста сообщения */
+  --bubbles-text-time: #fff;
+}

@@ -1,6 +1,7 @@
 import { ActionIcon, Button, Loader } from "@mantine/core"
 import { useQuery } from "@tanstack/react-query"
 import { ArrowLeft } from "lucide-react"
+import { useEffect, useRef } from "react"
 import {
   ChatAvatar,
   chatHistoryQueryOptions,
@@ -12,6 +13,7 @@ import {
   useSelectChat
 } from "@/entities/chat"
 import { MessageComposer } from "@/features/send-message"
+import { isFocusLost } from "@/shared/lib"
 import { buildFeed } from "../lib/build-feed"
 import { useStickToBottom } from "../model/hooks/use-stick-to-bottom"
 import cls from "./ChatWindow.module.css"
@@ -24,6 +26,11 @@ function ChatHeader({ chatId }: { chatId: string }) {
   })
   const title = getChatTitle({ chatId, name: chat?.name ?? null })
   const phone = formatPhone(chatId)
+  const titleRef = useRef<HTMLHeadingElement>(null)
+
+  useEffect(() => {
+    if (isFocusLost()) titleRef.current?.focus()
+  }, [])
 
   return (
     <header className={cls.header}>
@@ -40,7 +47,9 @@ function ChatHeader({ chatId }: { chatId: string }) {
       </ActionIcon>
       <ChatAvatar chatId={chatId} title={title} size={40} />
       <div className={cls.headerText}>
-        <h2 className={cls.headerTitle}>{title}</h2>
+        <h2 ref={titleRef} className={cls.headerTitle} tabIndex={-1}>
+          {title}
+        </h2>
         {title !== phone && <p className={cls.headerSubtitle}>{phone}</p>}
       </div>
     </header>
@@ -59,7 +68,7 @@ function MessageFeed({ chatId }: { chatId: string }) {
   if (isPending) {
     return (
       <div className={cls.state}>
-        <Loader size="sm" color="white" />
+        <Loader size="sm" color="white" role="status" aria-label="Загрузка сообщений" />
       </div>
     )
   }
@@ -109,7 +118,10 @@ function MessageFeed({ chatId }: { chatId: string }) {
   )
 }
 
-/** Правая часть MAX: шапка 64px, лента на фоне чата, плавающая панель ввода */
+/**
+ * Правая часть MAX: шапка 64px, лента на фоне чата, плавающая панель ввода. На узкой ширине
+ * список скрывается вместе с нажатой строкой, поэтому потерянный фокус переходит на заголовок чата.
+ */
 export function ChatWindow({ chatId }: { chatId: string }) {
   const { isSuccess } = useQuery(chatHistoryQueryOptions(chatId))
 

@@ -8,8 +8,12 @@ import {
 } from "@mantine/core"
 import cls from "./theme.module.css"
 import "./max-tokens.css"
+import "./contrast-tokens.css"
 
-/** Шкала вокруг `--button-primary` MAX (#007aff): 4 — hover, 6 — основной, 7 — pressed */
+/**
+ * Шкала вокруг `--button-primary` MAX. Основной оттенок 6 темнее MAX (#0066d6 вместо #007aff):
+ * белый текст кнопки даёт 5.42:1 вместо 4.02:1 (WCAG AA). Hover и pressed — в contrast-tokens.css
+ */
 const max: MantineColorsTuple = [
   "#e5f2ff",
   "#cce4ff",
@@ -17,10 +21,10 @@ const max: MantineColorsTuple = [
   "#66afff",
   "#479fff",
   "#1a88ff",
-  "#007aff",
-  "#006ee5",
-  "#0062cc",
-  "#0055b3"
+  "#0066d6",
+  "#0059bb",
+  "#004fa6",
+  "#004490"
 ]
 
 /**

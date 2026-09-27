@@ -6,7 +6,14 @@ import { normalizePhone, phoneSchema } from "../../lib/normalize-phone"
 import { useStartChat } from "../../model/hooks/use-start-chat"
 import cls from "./StartChatForm.module.css"
 
-const INPUT_CLASS_NAMES = { input: cls.input }
+const INPUT_CLASS_NAMES = {
+  root: cls.field,
+  wrapper: cls.fieldWrapper,
+  input: cls.input,
+  error: cls.error
+}
+
+const ERROR_PROPS = { role: "alert" }
 
 const parsePhone = (value: string) => phoneSchema.safeParse(normalizePhone(value))
 
@@ -52,7 +59,7 @@ export function StartChatForm() {
         leftSection={<Search size={18} />}
         rightSection={
           isPending ? (
-            <Loader size={18} />
+            <Loader size={18} role="status" aria-label="Проверяем номер" />
           ) : (
             value.trim() !== "" && (
               <ActionIcon type="submit" variant="subtle" radius="xl" aria-label="Открыть чат">
@@ -61,11 +68,9 @@ export function StartChatForm() {
             )
           )
         }
-        error={Boolean(message)}
+        error={message}
+        errorProps={ERROR_PROPS}
       />
-      <p className={cls.error} role="alert">
-        {message}
-      </p>
     </form>
   )
 }

@@ -9,10 +9,23 @@
   border-radius: 12px;
 }
 
-/* description MAX 13/16; высота зарезервирована под одну строку */
-.error {
-  min-height: 16px;
-  margin: 4px 0 0;
+/* 20px = отступ 4px + строка ошибки 16px: место есть всегда, ошибка его только заполняет */
+.field {
+  position: relative;
+  padding-bottom: 20px;
+}
+
+/* Mantine при ошибке пишет инлайн margin-bottom обёртки, а место уже зарезервировано */
+.field .fieldWrapper {
+  margin-bottom: 0;
+}
+
+/* description MAX 13/16 */
+.field .error {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  margin: 0;
   padding-inline: 12px;
   overflow: hidden;
   font-size: 13px;
