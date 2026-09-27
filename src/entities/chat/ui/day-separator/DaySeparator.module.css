@@ -8,7 +8,6 @@
   pointer-events: none;
 }
 
-/* capsule MAX: --capsule-outside, радиус 10, 13/16, белый текст, размытие фона */
 .capsule {
   padding: 2px 8px;
   border-radius: 10px;

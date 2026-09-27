@@ -4,7 +4,6 @@ import type { TUnknownWebhook, TWebhook } from "@/shared/api"
 
 type TNotificationContext = {
   queryClient: QueryClient
-  /** Открытый чат: входящие в него не считаются непрочитанными */
   selectedChatId: string | null
 }
 
@@ -15,7 +14,6 @@ type TWebhookHandlers = {
   ) => void
 }
 
-/** Исходящее с телефона или через API: имени собеседника в нём нет, кроме `chatName` */
 const applyOutgoing = (webhook: TMessageWebhook, { queryClient }: TNotificationContext) =>
   chatCache.addMessage(queryClient, webhookToMessage(webhook), {
     name: webhook.senderData.chatName,
@@ -31,7 +29,6 @@ const WEBHOOK_HANDLERS: TWebhookHandlers = {
     })
   },
   outgoingMessageReceived: applyOutgoing,
-  // дубль нашего же sendMessage: upsert по idMessage не даст второго пузыря
   outgoingAPIMessageReceived: applyOutgoing,
   outgoingMessageStatus: ({ chatId, idMessage, status }, { queryClient }) =>
     chatCache.setStatus(queryClient, chatId, idMessage, status),

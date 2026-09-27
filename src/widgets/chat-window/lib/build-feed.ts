@@ -4,7 +4,6 @@ export type TFeedItem =
   | { type: "day"; key: string; timestamp: number }
   | { type: "message"; key: string; message: TMessage; isLastInGroup: boolean }
 
-/** Серия — подряд идущие сообщения одного направления в пределах 5 минут */
 const GROUP_GAP_SECONDS = 5 * 60
 
 const isSameGroup = (current: TMessage, next: TMessage | undefined) =>
@@ -13,7 +12,7 @@ const isSameGroup = (current: TMessage, next: TMessage | undefined) =>
   getDayKey(next.timestamp) === getDayKey(current.timestamp) &&
   next.timestamp - current.timestamp <= GROUP_GAP_SECONDS
 
-/** Лента: капсула дня перед первым сообщением каждого дня, «хвост» у последнего в серии */
+/** Лента: капсула дня перед первым сообщением дня, «хвост» у последнего в серии — подряд от одного автора в пределах 5 минут */
 export function buildFeed(messages: readonly TMessage[]): TFeedItem[] {
   const items: TFeedItem[] = []
   messages.forEach((message, index) => {

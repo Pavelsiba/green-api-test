@@ -31,7 +31,6 @@ describe("buildFeed", () => {
     const tails = feed.flatMap((item) =>
       item.type === "message" && item.isLastInGroup ? [item.message.id] : []
     )
-    // «d» отделено от «c» паузой больше 5 минут — отдельная серия
     expect(tails).toEqual(["b", "c", "d"])
   })
 })

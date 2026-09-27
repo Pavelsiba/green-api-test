@@ -10,10 +10,6 @@ import cls from "./theme.module.css"
 import "./max-tokens.css"
 import "./contrast-tokens.css"
 
-/**
- * Шкала вокруг `--button-primary` MAX. Основной оттенок 6 темнее MAX (#0066d6 вместо #007aff):
- * белый текст кнопки даёт 5.42:1 вместо 4.02:1 (WCAG AA). Hover и pressed — в contrast-tokens.css
- */
 const max: MantineColorsTuple = [
   "#e5f2ff",
   "#cce4ff",
@@ -28,9 +24,10 @@ const max: MantineColorsTuple = [
 ]
 
 /**
- * Тема в духе MAX: шрифт, радиусы и размеры сняты с web.max.ru.
- * Цвета Mantine ссылаются на токены из `max-tokens.css`, поэтому тёмная схема
- * переключается сама вместе с `data-mantine-color-scheme`.
+ * Тема в духе MAX: шрифт, радиусы и размеры сняты с web.max.ru. Цвета Mantine через
+ * `cssVariablesResolver` ссылаются на токены из `max-tokens.css`, поэтому тёмная схема
+ * переключается сама вместе с `data-mantine-color-scheme`. Основной оттенок шкалы `max` —
+ * `#0066d6`, темнее MAX `#007aff`: белый текст кнопки даёт 5.42:1 (WCAG AA) вместо 4.02:1.
  */
 export const theme = createTheme({
   primaryColor: "max",
@@ -58,7 +55,6 @@ const sharedVariables = {
   "--mantine-color-placeholder": "var(--text-mute)"
 }
 
-/** Базовые цвета Mantine берутся из палитры MAX в обеих схемах */
 export const cssVariablesResolver: CSSVariablesResolver = () => ({
   variables: {},
   light: sharedVariables,

@@ -26,7 +26,10 @@ const getWebhookContent = (data: TMessageData): TMessageContent => {
   return { type: "text", text }
 }
 
-/** Запись журнала (история, последние сообщения) → сообщение чата */
+/**
+ * Запись журнала или вебхук → сообщение чата. Исходящее из вебхука получает статус `sent`,
+ * дальше его двигают вебхуки `outgoingMessageStatus`.
+ */
 export function journalToMessage(message: TJournalMessage): TMessage {
   const content: TMessageContent = isJournalTextMessage(message)
     ? { type: "text", text: message.textMessage }
@@ -45,10 +48,6 @@ export function journalToMessage(message: TJournalMessage): TMessage {
   }
 }
 
-/**
- * Вебхук сообщения → сообщение чата. Статус исходящего с телефона или через API
- * на момент вебхука — `sent`: дальше его двигают вебхуки `outgoingMessageStatus`.
- */
 export function webhookToMessage(webhook: TMessageWebhook): TMessage {
   const isIncoming = webhook.typeWebhook === "incomingMessageReceived"
   return {

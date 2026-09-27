@@ -4,14 +4,12 @@ import { credentialsSchema } from "./credentials-schema"
 
 type TStoredCredentials = TCredentials | null
 
-// jotai 3 не экспортирует SyncStorage; последняя перегрузка createJSONStorage — синхронная
 type TSyncStorage<TValue> = ReturnType<typeof createJSONStorage<TValue>>
 
 const STORAGE_KEY = "green-api-credentials"
 
 const jsonStorage = createJSONStorage<unknown>(() => localStorage)
 
-/** Битые или устаревшие данные в localStorage — это «не вошёл», а не падение приложения */
 const parseStored = (value: unknown): TStoredCredentials => {
   if (value === null) return null
   const result = credentialsSchema.safeParse(value)
@@ -19,10 +17,6 @@ const parseStored = (value: unknown): TStoredCredentials => {
   return result.success ? result.data : null
 }
 
-/**
- * Каждое чтение и запись заодно передаёт креды транспорту. С `getOnInit` первое чтение
- * происходит при импорте модуля, так что `greenApiInstance` знает креды до первого рендера.
- */
 const transportSyncedStorage: TSyncStorage<TStoredCredentials> = {
   getItem: (key) => {
     const credentials = parseStored(jsonStorage.getItem(key, null))
@@ -37,7 +31,6 @@ const transportSyncedStorage: TSyncStorage<TStoredCredentials> = {
     setCredentials(null)
     jsonStorage.removeItem(key)
   },
-  // вход или выход в соседней вкладке
   subscribe: (key, callback) =>
     jsonStorage.subscribe?.(
       key,
@@ -50,7 +43,12 @@ const transportSyncedStorage: TSyncStorage<TStoredCredentials> = {
     )
 }
 
-/** Креды текущей сессии; `null` — показать экран входа */
+/**
+ * Креды текущей сессии в localStorage; `null` — показать экран входа. Каждое чтение и запись
+ * заодно передаёт креды транспорту (`setCredentials`); с `getOnInit` первое чтение идёт при
+ * импорте модуля, так что транспорт знает креды до первого рендера. Битые данные в хранилище —
+ * «не вошёл». Вход и выход в соседней вкладке приходят через `subscribe`.
+ */
 export const credentialsAtom = atomWithStorage<TStoredCredentials>(
   STORAGE_KEY,
   null,

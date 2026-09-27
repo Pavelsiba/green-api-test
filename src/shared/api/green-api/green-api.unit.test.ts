@@ -9,7 +9,6 @@ const credentials = {
   apiTokenInstance: "tkn"
 }
 
-/** Replays one canned response and records requests */
 function mockFetch(body: string, status = 200) {
   const fetchMock = vi.fn(
     async (_url: string, _init?: RequestInit) => new Response(body, { status })
@@ -38,7 +37,6 @@ async function apiError(promise: Promise<unknown>): Promise<TApiErrorKind> {
   return (e as ApiError).error
 }
 
-// Shapes copied from live responses on 2026-09-25, personal values replaced
 const instanceData = { idInstance: 7201000001, wid: "79990000000@c.us", typeInstance: "whatsapp" }
 const senderData = {
   chatId: "79001234567@c.us",
@@ -375,7 +373,6 @@ describe("transport failures", () => {
   })
 })
 
-// Journal shapes copied from live responses on 2026-09-26, personal values replaced
 const journalIncomingText = {
   type: "incoming",
   idMessage: "A5D2E81F0D3B4C6A9E7F1B2C3D4E5F60",

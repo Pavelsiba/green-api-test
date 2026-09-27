@@ -5,13 +5,13 @@ import cls from "./MessageBubble.module.css"
 
 type TMessageBubbleProps = {
   message: TMessage
-  /** Последнее в серии подряд идущих от одного автора: у него «хвост» и отступ после */
   isLastInGroup: boolean
 }
 
 /**
  * Пузырь MAX: цвета из `--bubbles-*` по `data-bubbles-variant`, радиус 16,
- * угол «хвоста» 6. Время и галочки обтекаются текстом справа внизу.
+ * угол «хвоста» 6. Время и галочки обтекаются текстом справа внизу. `isLastInGroup` —
+ * последнее в серии от одного автора: у него «хвост» и отступ после.
  */
 export function MessageBubble({ message, isLastInGroup }: TMessageBubbleProps) {
   const { content, direction, status, timestamp } = message

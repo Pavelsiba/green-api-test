@@ -1,7 +1,6 @@
 import { atom } from "jotai"
 import { chatIdFromHash, hashFromChatId } from "../lib/chat-hash"
 
-/** Запись истории, которую добавили мы при открытии чата: «назад» может её снять */
 const OPENED_BY_APP = "chatOpenedByApp"
 
 const readHashChatId = () => chatIdFromHash(window.location.hash)

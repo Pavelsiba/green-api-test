@@ -1,4 +1,3 @@
-/* Как экран входа web.max.ru: колонка по центру на фоне --background-secondary, без карточки */
 .page {
   position: relative;
   display: flex;
@@ -9,7 +8,6 @@
   background: var(--background-secondary);
 }
 
-/* Как иконки в углах экрана входа web.max.ru */
 .corner {
   position: absolute;
   top: 12px;

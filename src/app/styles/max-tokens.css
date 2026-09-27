@@ -143,7 +143,6 @@
   --states-button-primary-disabled: #ffffff1f;
 }
 
-/* Пузыри сообщений: контейнер помечается data-bubbles-variant */
 :root [data-bubbles-variant="incoming"] {
   --bubbles-background-bubble: #fff;
   --bubbles-text-body: #060708;

@@ -1,7 +1,6 @@
 import { en } from "zod/locales"
 import * as z from "zod/mini"
 
-// zod/mini не несёт текстов ошибок («Invalid input»); локаль нужна для z.prettifyError
 z.config(en())
 
 type TIssue = z.core.$ZodIssue
@@ -29,7 +28,6 @@ export function validate<TSchema extends z.ZodMiniType>(
   return { ok: false, reason: `[${context}] validation failed:\n${message}` }
 }
 
-/** Объединение проходит, если хотя бы одна ветка упала только на лишних ключах. */
 function hasOnlyExtraKeys(issues: readonly TIssue[]): boolean {
   return issues.every(
     (issue) =>

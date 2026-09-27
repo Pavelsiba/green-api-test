@@ -15,7 +15,6 @@ export function useLogin() {
 
   const { mutate, isPending, error, reset } = useMutation({
     mutationFn: async (credentials: TCredentials) => {
-      // staleTime: 0 — после сканирования QR повторная попытка должна спросить сервер заново
       const state = await queryClient.fetchQuery({
         ...instanceStateQueryOptions(credentials),
         staleTime: 0

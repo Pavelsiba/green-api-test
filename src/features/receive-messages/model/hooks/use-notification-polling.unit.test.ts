@@ -29,7 +29,6 @@ const unknown: TNotification = {
   body: { typeWebhook: "unknown", original: "deviceInfo", reason: "not modelled" }
 }
 
-/** Отдаёт уведомления по очереди, дальше — пустая очередь */
 function queue(...notifications: TNotification[]) {
   const pending = [...notifications]
   vi.mocked(greenApi.receiveNotification).mockImplementation(async () => pending.shift() ?? null)

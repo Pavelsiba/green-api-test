@@ -3,10 +3,11 @@ import * as z from "zod/mini"
 /**
  * Рантайм-контракты ответов GREEN-API. Объекты strict: перечислены все поля,
  * виденные в живых ответах 2026-09-25. Лишнее поле — сигнал дрейфа (см. `validate`).
- * Единственное осознанное исключение — `unsupportedMessageDataSchema`: медиа вне скоупа.
+ * Нестрогие только ветки медиа (вне скоупа), у них `typeMessage: string` — сужать текст
+ * нужно guard-функциями `isTextMessageData` / `isJournalTextMessage`. Вебхук `unknown` опрос
+ * обязан удалить, иначе очередь будет отдавать его вечно.
  */
 
-/** Креды инстанса из личного кабинета GREEN-API */
 export type TCredentials = {
   apiUrl: string
   idInstance: string
@@ -38,8 +39,6 @@ const stateInstanceSchema = z
       "notAuthorized | authorized | blocked | starting | suspended | …; незнакомые значения пропускаем, пускает только authorized"
     )
   )
-
-// ─── методы ───────────────────────────────────────────────────────────────
 
 export const stateInstanceResponseSchema = z.strictObject({
   stateInstance: stateInstanceSchema
@@ -73,8 +72,6 @@ export const deleteNotificationResponseSchema = z.strictObject({
     .check(z.describe('Пусто при успехе, "Message receiptId = N not found" при повторе'))
 })
 
-// ─── вебхуки ──────────────────────────────────────────────────────────────
-
 const outgoingStatusSchema = z.enum([
   "pending",
   "sent",
@@ -90,7 +87,6 @@ const textMessageDataSchema = z.strictObject({
   textMessageData: z.strictObject({ textMessage: z.string() })
 })
 
-/** Одинаков в вебхуке (`extendedTextMessageData`) и в журнале (`extendedTextMessage`) */
 const extendedTextSchema = z.strictObject({
   text: z.string().check(z.describe("Сюда кладётся текст, отправленный через API или со ссылкой")),
   description: z.optional(z.string()),
@@ -110,11 +106,6 @@ const TEXT_MESSAGE_TYPES: readonly string[] = ["textMessage", "extendedTextMessa
 
 const isNotTextType = (typeMessage: string) => !TEXT_MESSAGE_TYPES.includes(typeMessage)
 
-/**
- * Нестрогая намеренно: у медиа, опросов и реакций свои поля, которые мы не моделируем.
- * Текстовые типы исключены — иначе кривое текстовое сообщение молча
- * показалось бы «неподдерживаемым» вместо сигнала о дрейфе.
- */
 const unsupportedMessageDataSchema = z.looseObject({
   typeMessage: z
     .string()
@@ -192,23 +183,11 @@ export const webhookSchema = z.discriminatedUnion("typeWebhook", [
   })
 ])
 
-/**
- * `receiptId` проверяется жёстко: без него уведомление не удалить.
- * От `body` здесь нужен только `typeWebhook`; полная проверка — в `greenApi.receiveNotification`,
- * чтобы непрошедшее тело всё равно удалялось, а не блокировало очередь.
- */
 export const notificationEnvelopeSchema = z.strictObject({
   receiptId: z.number(),
   body: z.looseObject({ typeWebhook: z.string() })
 })
 
-// ─── журнал сообщений: getChatHistory, lastIncomingMessages, lastOutgoingMessages ───
-
-/**
- * Поля записи журнала плоские, в отличие от вебхука. Формы сняты с живых ответов 2026-09-26.
- * Входящий extendedTextMessage в журнале вживую не видели: если придёт в другой форме,
- * запись станет `unknown` с предупреждением о дрейфе, а не уронит весь список.
- */
 const journalBaseShape = {
   idMessage: idMessageSchema,
   timestamp: timestampSchema,
@@ -256,7 +235,6 @@ const journalTextMessageSchema = z.union([
   z.strictObject({ ...journalOutgoingShape, ...journalExtendedTextShape })
 ])
 
-/** Минимум, без которого запись не показать; всё остальное проверяет `journalMessageSchema` */
 export const journalEnvelopeSchema = z.array(
   z.looseObject({
     type: z.enum(["incoming", "outgoing"]),
@@ -267,7 +245,6 @@ export const journalEnvelopeSchema = z.array(
   })
 )
 
-/** Медиа, реакции и прочее вне скоупа: нестрогая, как `unsupportedMessageDataSchema` */
 const journalUnsupportedMessageSchema = z.looseObject({
   type: z.enum(["incoming", "outgoing"]),
   idMessage: idMessageSchema,
@@ -288,10 +265,6 @@ export type TOutgoingMessageStatus = Extract<
   { typeWebhook: "outgoingMessageStatus" }
 >["status"]
 
-/**
- * Вебхук, который мы не включали или не смогли разобрать. Опрос обязан его удалить,
- * иначе `receiveNotification` будет отдавать его вечно и очередь встанет.
- */
 export type TUnknownWebhook = { typeWebhook: "unknown"; original: string; reason: string }
 
 export type TNotification = { receiptId: number; body: TWebhook | TUnknownWebhook }
@@ -299,7 +272,6 @@ export type TNotification = { receiptId: number; body: TWebhook | TUnknownWebhoo
 export type TJournalEnvelope = z.infer<typeof journalEnvelopeSchema>[number]
 export type TJournalTextMessage = z.infer<typeof journalTextMessageSchema>
 
-/** Запись журнала, не прошедшая схему: показывается как неподдерживаемая, дрейф уже залогирован */
 type TUnknownJournalMessage = {
   type: TJournalEnvelope["type"]
   idMessage: string
@@ -313,10 +285,6 @@ export type TJournalMessage = z.infer<typeof journalMessageSchema> | TUnknownJou
 
 type TTextMessageData = z.infer<typeof textMessageDataSchema | typeof extendedTextMessageDataSchema>
 
-/**
- * У нестрогих веток `typeMessage: string`, поэтому сравнение с литералом тип не сужает.
- * Guard надёжен: схемы запрещают нестрогим веткам текстовые `typeMessage`.
- */
 export const isTextMessageData = (data: TMessageData): data is TTextMessageData =>
   TEXT_MESSAGE_TYPES.includes(data.typeMessage)
 

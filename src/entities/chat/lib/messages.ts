@@ -3,12 +3,12 @@ import type { TChatPreview, TMessage, TMessageStatus } from "../model/types"
 /**
  * Чистые операции над лентой и списком чатов. Одно и то же событие может прийти дважды
  * (вебхук повторился, ответ sendMessage и `outgoingAPIMessageReceived`), поэтому все они
- * идемпотентны по id сообщения.
+ * идемпотентны по id сообщения. Статусы исходящих не откатываются назад: вебхуки статусов
+ * приходят не по порядку, а `failed` и прочие ошибки финальны.
  */
 
 const byTimestamp = (left: TMessage, right: TMessage) => left.timestamp - right.timestamp
 
-/** Добавляет сообщение по времени; повтор с тем же id заменяет старое, статус не откатывается назад */
 export function upsertMessage(messages: readonly TMessage[], message: TMessage): TMessage[] {
   const existing = messages.find((item) => item.id === message.id)
   if (!existing) return [...messages, message].sort(byTimestamp)
@@ -16,10 +16,6 @@ export function upsertMessage(messages: readonly TMessage[], message: TMessage):
   return messages.map((item) => (item.id === message.id ? merged : item))
 }
 
-/**
- * Оптимистичное сообщение получило настоящий id. Если вебхук с этим id уже успел
- * добавить копию, локальная удаляется, чтобы не было дубля.
- */
 export function confirmMessage(
   messages: readonly TMessage[],
   localId: string,
@@ -44,7 +40,6 @@ export const setMessageStatus = (
     item.id === id ? { ...item, status: pickLaterStatus(item.status, status) } : item
   )
 
-/** Порядок жизни исходящего; «ошибочные» статусы финальны и перекрывают всё */
 const STATUS_RANK: Record<TMessageStatus, number> = {
   sending: 0,
   pending: 1,
@@ -56,7 +51,6 @@ const STATUS_RANK: Record<TMessageStatus, number> = {
   notInGroup: 5
 }
 
-/** Вебхуки статусов приходят не по порядку: `delivered` после `read` не должен откатить галочки */
 function pickLaterStatus(
   current: TMessageStatus | undefined,
   next: TMessageStatus | undefined
@@ -70,13 +64,8 @@ const byLastMessage = (left: TChatPreview, right: TChatPreview) =>
   (right.lastMessage?.timestamp ?? Number.POSITIVE_INFINITY) -
   (left.lastMessage?.timestamp ?? Number.POSITIVE_INFINITY)
 
-/** Сортирует чаты: новые сверху, только что созданные без сообщений — в самом верху */
 export const sortChats = (chats: readonly TChatPreview[]) => [...chats].sort(byLastMessage)
 
-/**
- * Новое сообщение в чате: обновляет превью или создаёт чат. `unread` — входящее
- * в чат, который сейчас не открыт.
- */
 export function applyMessageToChats(
   chats: readonly TChatPreview[],
   message: TMessage,
@@ -95,7 +84,6 @@ export function applyMessageToChats(
   return sortChats([...chats.filter((chat) => chat.chatId !== message.chatId), updated])
 }
 
-/** Статус пришёл для последнего сообщения чата — обновляем его и в превью */
 export const applyStatusToChats = (
   chats: readonly TChatPreview[],
   chatId: string,
@@ -108,7 +96,6 @@ export const applyStatusToChats = (
       : chat
   )
 
-/** Id оптимистичного сообщения поменялся на серверный — превью должно ссылаться на новый */
 export const confirmMessageInChats = (
   chats: readonly TChatPreview[],
   chatId: string,
@@ -121,7 +108,6 @@ export const confirmMessageInChats = (
       : chat
   )
 
-/** Пустой чат из поиска по номеру; существующий не трогаем */
 export const addEmptyChat = (chats: readonly TChatPreview[], chatId: string): TChatPreview[] =>
   chats.some((chat) => chat.chatId === chatId)
     ? [...chats]

@@ -5,13 +5,11 @@ import { journalToMessage } from "./to-message"
 
 const PERSONAL_CHAT_SUFFIX = "@c.us"
 
-/** Поле нестрогой записи журнала (медиа и т.п.), если оно строка/булево нужного вида */
 const readString = (message: TJournalMessage, key: string): string | null => {
   const value: unknown = (message as Record<string, unknown>)[key]
   return typeof value === "string" && value !== "" ? value : null
 }
 
-/** Имя собеседника есть только во входящих: сначала из контактов телефона, потом из профиля */
 const getSenderName = (message: TJournalMessage) =>
   message.type === "incoming"
     ? (readString(message, "senderContactName") ?? readString(message, "senderName"))

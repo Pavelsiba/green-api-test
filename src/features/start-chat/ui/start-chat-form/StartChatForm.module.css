@@ -2,25 +2,21 @@
   padding: 0 16px;
 }
 
-/* поиск MAX: 40px, заливка --background-tertiary, радиус 12; .form — чтобы перебить 52px из темы */
 .form .input {
   --input-height: 40px;
 
   border-radius: 12px;
 }
 
-/* 20px = отступ 4px + строка ошибки 16px: место есть всегда, ошибка его только заполняет */
 .field {
   position: relative;
   padding-bottom: 20px;
 }
 
-/* Mantine при ошибке пишет инлайн margin-bottom обёртки, а место уже зарезервировано */
 .field .fieldWrapper {
   margin-bottom: 0;
 }
 
-/* description MAX 13/16 */
 .field .error {
   position: absolute;
   inset-inline: 0;

@@ -5,23 +5,23 @@ import { validate } from "./validate"
 
 let currentCredentials: TCredentials | null = null
 
-/** Ставится при входе, сбрасывается при выходе. Вызовы без явного `auth` берут эти креды. */
 export const setCredentials = (credentials: TCredentials | null) => {
   currentCredentials = credentials
 }
 
 type TApiInit<TSchema extends z.ZodMiniType> = Omit<RequestInit, "body" | "credentials"> & {
-  /** рантайм-контракт ответа; несовпадение (кроме лишних ключей) — `badResponse` */
   schema: TSchema
   json?: unknown
-  /** дописывается после токена, например `/42` для deleteNotification */
   path?: string
-  /** перекрывает сохранённые креды: так проверяются креды до сохранения на экране входа */
   auth?: TCredentials
-  /** пустая очередь отвечает `""` или `null`; без флага это `badResponse` */
   allowEmpty?: boolean
 }
 
+/**
+ * Запрос к `{apiUrl}/waInstance{id}/{method}/{token}`: креды из `setCredentials` или явный
+ * `auth` (проверка на экране входа), ответ проверяется схемой, ошибки — `ApiError`.
+ * `allowEmpty` — пустая очередь уведомлений. `AbortError` пробрасывается как есть.
+ */
 export async function greenApiInstance<TSchema extends z.ZodMiniType>(
   method: string,
   init: TApiInit<TSchema> & { allowEmpty: true }
@@ -49,7 +49,6 @@ export async function greenApiInstance<TSchema extends z.ZodMiniType>(
     response = await fetch(url, { ...init, headers, body })
     text = await response.text()
   } catch (error) {
-    // AbortError пробрасываем как есть: TanStack Query считает его отменой, а не сбоем
     if (error instanceof DOMException && error.name === "AbortError") throw error
     throw new ApiError({
       kind: "network",
@@ -72,7 +71,6 @@ export async function greenApiInstance<TSchema extends z.ZodMiniType>(
   return result.data
 }
 
-/** `undefined` — «не JSON»; пустой текст считается `null`. */
 function parseJson(text: string): unknown {
   if (text.trim() === "") return null
   try {
@@ -86,7 +84,6 @@ function isRejected(data: unknown): data is { status: false; reason: string } {
   return typeof data === "object" && data !== null && "status" in data && data.status === false
 }
 
-/** Текст ошибки: `message` из JSON-тела (400 валидации) или начало сырого ответа. */
 function getErrorMessage(data: unknown, text: string): string {
   return typeof data === "object" &&
     data !== null &&

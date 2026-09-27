@@ -1,7 +1,6 @@
 import { queryOptions } from "@tanstack/react-query"
 import { greenApi, type TCredentials } from "@/shared/api"
 
-/** Адресация состояния инстанса в кэше TanStack Query */
 export const authQueryKeys = {
   all: ["auth"] as const,
   instanceState: (idInstance: string) => [...authQueryKeys.all, idInstance, "state"] as const

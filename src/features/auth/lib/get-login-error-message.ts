@@ -1,7 +1,6 @@
 import { ApiError, type TApiErrorKind } from "@/shared/api"
 import { InstanceStateError } from "./instance-state-error"
 
-// Все тексты — не длиннее двух строк слота ошибки на ширине 320px, иначе форма прыгнет
 const MESSAGE_BY_STATE: Record<string, string> = {
   notAuthorized: "Инстанс не привязан к WhatsApp: отсканируйте QR-код в личном кабинете",
   blocked: "Номер заблокирован в WhatsApp",

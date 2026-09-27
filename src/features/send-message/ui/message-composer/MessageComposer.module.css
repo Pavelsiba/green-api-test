@@ -1,4 +1,3 @@
-/* composer MAX: --float-primary-flat, радиус 16, тень elevation-3 */
 .composer {
   display: flex;
   gap: 8px;
@@ -16,7 +15,6 @@
   min-width: 0;
 }
 
-/* Поле внутри карточки без своей заливки; .composer — чтобы перебить 52px из темы */
 .composer .input {
   --input-height: 40px;
   --input-bg: transparent;

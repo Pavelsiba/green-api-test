@@ -1,6 +1,10 @@
 import type { TOutgoingMessageStatus } from "@/shared/api"
 
-/** `sending` — локальное оптимистичное сообщение, сервер ещё не вернул idMessage */
+/**
+ * Модель чата. `sending` — оптимистичное сообщение с временным id `local-*`, сервер ещё
+ * не вернул idMessage. `timestamp` — Unix-секунды, `status` есть только у исходящих,
+ * `name` чата — из контактов или профиля WhatsApp, `null` — показываем номер.
+ */
 export type TMessageStatus = TOutgoingMessageStatus | "sending"
 
 export type TMessageContent =
@@ -8,21 +12,16 @@ export type TMessageContent =
   | { type: "unsupported"; typeMessage: string }
 
 export type TMessage = {
-  /** idMessage сервера или временный `local-*` у оптимистичного сообщения */
   id: string
   chatId: string
   direction: "incoming" | "outgoing"
-  /** Unix-секунды */
   timestamp: number
   content: TMessageContent
-  /** Только у исходящих */
   status?: TMessageStatus
 }
 
 export type TChatPreview = {
-  /** `79001234567@c.us` */
   chatId: string
-  /** Имя из контактов или профиля WhatsApp; `null` — показываем номер */
   name: string | null
   lastMessage: TMessage | null
   unreadCount: number

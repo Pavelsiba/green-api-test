@@ -12,7 +12,6 @@ const credentials = {
   apiTokenInstance: "tkn"
 }
 
-/** Атом читает localStorage при импорте, поэтому каждый тест импортирует модуль заново */
 const importAtom = async () => {
   vi.resetModules()
   const { credentialsAtom } = await import("./credentials-atom")

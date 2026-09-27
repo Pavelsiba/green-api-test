@@ -10,7 +10,6 @@ const notificationQueryKeys = {
 
 type TPollingContext = {
   queryClient: QueryClient
-  /** Читается в момент применения, а не при создании опций: чат мог смениться за время long-poll */
   getSelectedChatId: () => string | null
 }
 
@@ -22,6 +21,7 @@ type TPollingContext = {
  * Жизненный цикл отдаём TanStack Query: интервал не запускает второй запрос, пока идёт первый
  * (параллельный long-poll сервер держит 10 с и отвечает 408), запрос отменяется при
  * размонтировании, без сети опрос на паузе, временные сбои ретраятся по правилам `queryClient`.
+ * Открытый чат читается в момент применения: за время long-poll он мог смениться.
  * Данные запроса — receiptId последнего уведомления, сами по себе не нужны.
  */
 export const notificationPollingQueryOptions = ({
@@ -41,7 +41,6 @@ export const notificationPollingQueryOptions = ({
       return notification.receiptId
     },
     refetchInterval: (query) => getPollInterval(query.state.error),
-    // без этого в фоновой вкладке сообщения перестанут приходить
     refetchIntervalInBackground: true,
     refetchOnWindowFocus: false,
     staleTime: 0,

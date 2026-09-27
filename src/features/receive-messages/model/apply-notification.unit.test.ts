@@ -22,7 +22,6 @@ const incoming = (idMessage: string): TWebhook => ({
   messageData: { typeMessage: "textMessage", textMessageData: { textMessage: "hi" } }
 })
 
-/** Кэш с загруженными списком и историей одного чата */
 function setup(history: TMessage[] = []) {
   const { queryClient } = createQueryWrapper()
   queryClient.setQueryData<TChatPreview[]>(chatQueryKeys.list(), [])

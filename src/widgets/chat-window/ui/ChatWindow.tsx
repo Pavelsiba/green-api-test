@@ -136,7 +136,6 @@ export function ChatWindow({ chatId }: { chatId: string }) {
   )
 }
 
-/** Чат не выбран: подсказка на фоне чата */
 export function ChatWindowPlaceholder() {
   return (
     <section className={cls.window}>

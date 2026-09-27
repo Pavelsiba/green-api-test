@@ -32,7 +32,6 @@ jobs:
       - name: Tests
         run: bun run test
 
-  # сборка и деплой — только с main, pull request проверяется без публикации
   build:
     needs: checks
     if: github.event_name != 'pull_request'

@@ -36,7 +36,6 @@ const updateList = (
   )
 
 export const chatCache = {
-  /** Новое или повторное сообщение: лента, превью и счётчик непрочитанных */
   addMessage: (
     queryClient: QueryClient,
     message: TMessage,
@@ -51,13 +50,11 @@ export const chatCache = {
     updateList(queryClient, (chats) => applyStatusToChats(chats, chatId, id, status))
   },
 
-  /** Ответ sendMessage: временный id → серверный */
   confirm: (queryClient: QueryClient, chatId: string, localId: string, serverId: string) => {
     updateHistory(queryClient, chatId, (messages) => confirmMessage(messages, localId, serverId))
     updateList(queryClient, (chats) => confirmMessageInChats(chats, chatId, localId, serverId))
   },
 
-  /** Чат из поиска по номеру: появляется в списке даже без сообщений */
   addChat: (queryClient: QueryClient, chatId: string) =>
     updateList(queryClient, (chats) => addEmptyChat(chats, chatId)),
 

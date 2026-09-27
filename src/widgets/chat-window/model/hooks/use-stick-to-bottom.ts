@@ -1,6 +1,5 @@
 import { useLayoutEffect, useRef } from "react"
 
-/** Считаем, что пользователь «внизу», если до конца ленты меньше этого */
 const BOTTOM_THRESHOLD_PX = 80
 
 /**

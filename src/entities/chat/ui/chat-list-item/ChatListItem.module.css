@@ -1,4 +1,3 @@
-/* Ячейка чата MAX: радиус 16, отступы 8/12, зазор 12, hover/selected из --states-background-card-* */
 .item {
   display: grid;
   grid-template-areas:
@@ -43,7 +42,6 @@
   }
 }
 
-/* body strong MAX: 16/20, 500 */
 .title {
   grid-area: title;
   overflow: hidden;
@@ -55,7 +53,6 @@
   text-overflow: ellipsis;
 }
 
-/* label MAX: 12/16 */
 .time {
   grid-area: time;
   font-size: 12px;
@@ -64,7 +61,6 @@
   color: var(--text-tertiary);
 }
 
-/* detail MAX: 15/20 */
 .text {
   display: flex;
   grid-area: text;
