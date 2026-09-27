@@ -19,6 +19,11 @@ describe("getLoginErrorMessage", () => {
     )
   })
 
+  it("blames the instance, not the server, for a 400 such as a deleted instance", () => {
+    const deleted = createApiError({ kind: "validation", message: "Instance is deleted" })
+    expect(getLoginErrorMessage(deleted)).toMatch(/Инстанс удалён/)
+  })
+
   it("falls back for other transport errors and foreign exceptions", () => {
     expect(
       getLoginErrorMessage(createApiError({ kind: "http", status: 502, message: "" }))

@@ -16,6 +16,7 @@ const MESSAGE_BY_API_KIND: Partial<Record<TApiErrorKind["kind"], string>> = {
   unauthorized: "Неверный idInstance или apiTokenInstance",
   network: "Сервер недоступен: проверьте apiUrl и подключение к интернету",
   suspended: "Аккаунт GREEN-API заблокирован",
+  validation: "Инстанс удалён или недоступен: проверьте idInstance в личном кабинете",
   rateLimited: "Слишком много запросов. Подождите секунду и повторите"
 }
 
