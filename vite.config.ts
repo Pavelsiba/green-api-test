@@ -8,6 +8,10 @@ export default defineConfig(({ mode }) => {
   return {
     base: "./",
     plugins: [react()],
+    preview: {
+      host: "127.0.0.1",
+      strictPort: true
+    },
     resolve: {
       tsconfigPaths: true
     },
