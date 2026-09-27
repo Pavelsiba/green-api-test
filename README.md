@@ -4,7 +4,7 @@
 сообщений через [GREEN-API](https://green-api.com/). Внешний вид — по образцу
 [web.max.ru](https://web.max.ru/).
 
-**Демо:** https://pavelsiba.github.io/green-api-test/
+**Демо:** <https://pavelsiba.github.io/green-api-test/>
 
 Мессенджер — **WhatsApp**. Инстанс GREEN-API привязывается к мессенджеру на телефоне, а устанавливать
 MAX на личный телефон я не стал. П. 1 задания разрешает сделать интерфейс для WhatsApp вместо MAX.
@@ -46,7 +46,7 @@ bun install
 bun run dev
 ```
 
-Откройте адрес, который напечатает Vite (обычно http://localhost:5173).
+Откройте адрес, который напечатает Vite (обычно <http://localhost:5173>).
 
 Необязательно: чтобы не вводить данные каждый раз в режиме разработки, скопируйте `.env.example`
 в `.env` и заполните `VITE_API_URL`, `VITE_ID_INSTANCE`, `VITE_API_TOKEN_INSTANCE` — форма входа
