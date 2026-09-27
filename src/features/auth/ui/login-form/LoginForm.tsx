@@ -1,39 +1,56 @@
 import { Button, PasswordInput, Stack, TextInput, Title } from "@mantine/core"
-import { type FormEvent, useState } from "react"
+import { type SubmitEvent, useState } from "react"
 import * as z from "zod/mini"
 import { getLoginErrorMessage } from "../../lib/get-login-error-message"
 import { credentialsSchema } from "../../model/credentials-schema"
 import { useLogin } from "../../model/hooks/use-login"
 import cls from "./LoginForm.module.css"
 
-type TFieldErrors = Partial<Record<keyof z.infer<typeof credentialsSchema>, string[]>>
+type TCredentialsField = keyof z.infer<typeof credentialsSchema>
+type TFieldErrors = Partial<Record<TCredentialsField, string[]>>
 
-/** В dev-сборке форма заполнена кредами из `.env`; в прод они не попадают */
-const DEFAULT_VALUES = import.meta.env.DEV
+const FIELD_NAMES = {
+  apiUrl: "apiUrl",
+  idInstance: "idInstance",
+  apiTokenInstance: "apiTokenInstance"
+} as const satisfies { [TField in TCredentialsField]: TField }
+
+const DEFAULT_VALUES = __IS_DEV__
   ? {
-      apiUrl: import.meta.env.VITE_API_URL ?? "",
-      idInstance: import.meta.env.VITE_ID_INSTANCE ?? "",
-      apiTokenInstance: import.meta.env.VITE_API_TOKEN_INSTANCE ?? ""
+      apiUrl: __API_URL__,
+      idInstance: __ID_INSTANCE__,
+      apiTokenInstance: __API_TOKEN_INSTANCE__
     }
-  : { apiUrl: "", idInstance: "", apiTokenInstance: "" }
+  : { apiUrl: "https://7201.api.green-api.com", idInstance: "", apiTokenInstance: "" }
 
-/** Под каждым полем зарезервирована строка подсказки, ошибка встаёт в неё без сдвига соседей */
+const GREEN_API_CONSOLE_URL = "https://console.green-api.com"
+
 const FIELD_CLASS_NAMES = { root: cls.field, wrapper: cls.fieldWrapper, error: cls.fieldError }
 
-const readField = (formData: FormData, name: string) => String(formData.get(name) ?? "").trim()
+const readField = (formData: FormData, name: TCredentialsField) =>
+  String(formData.get(name) ?? "").trim()
 
+const parseCredentials = (form: HTMLFormElement) => {
+  const formData = new FormData(form)
+  return credentialsSchema.safeParse({
+    apiUrl: readField(formData, FIELD_NAMES.apiUrl),
+    idInstance: readField(formData, FIELD_NAMES.idInstance),
+    apiTokenInstance: readField(formData, FIELD_NAMES.apiTokenInstance)
+  })
+}
+
+/**
+ * Форма входа по данным инстанса GREEN-API. Поля проверяются `credentialsSchema`, креды
+ * сохраняются только после `getStateInstance` = `authorized` (`useLogin`). В dev поля заполнены
+ * из `.env`. Под каждым полем и под ошибкой сервера место зарезервировано — форма не прыгает.
+ */
 export function LoginForm() {
   const { login, isPending, error, reset } = useLogin()
   const [fieldErrors, setFieldErrors] = useState<TFieldErrors>({})
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const formData = new FormData(event.currentTarget)
-    const result = credentialsSchema.safeParse({
-      apiUrl: readField(formData, "apiUrl"),
-      idInstance: readField(formData, "idInstance"),
-      apiTokenInstance: readField(formData, "apiTokenInstance")
-    })
+    const result = parseCredentials(event.currentTarget)
 
     if (!result.success) {
       setFieldErrors(z.flattenError(result.error).fieldErrors)
@@ -43,13 +60,13 @@ export function LoginForm() {
     login(result.data)
   }
 
-  // новая правка полей убирает устаревшую ошибку сервера
-  const handleChange = () => {
-    if (error) reset()
-  }
-
   return (
-    <form className={cls.form} onSubmit={handleSubmit} onChange={handleChange} noValidate>
+    <form
+      className={cls.form}
+      onSubmit={handleSubmit}
+      onChange={() => error instanceof Error && reset()}
+      noValidate
+    >
       <Stack gap={24}>
         <Stack gap={8}>
           <Title order={1} className={cls.title}>
@@ -57,12 +74,7 @@ export function LoginForm() {
           </Title>
           <p className={cls.subtitle}>
             Данные инстанса из{" "}
-            <a
-              className={cls.link}
-              href="https://console.green-api.com"
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a className={cls.link} href={GREEN_API_CONSOLE_URL} target="_blank" rel="noreferrer">
               личного кабинета
             </a>
           </p>
@@ -71,9 +83,8 @@ export function LoginForm() {
         <div>
           <Stack gap={8}>
             <TextInput
-              name="apiUrl"
-              label="apiUrl"
-              placeholder="https://7201.api.green-api.com"
+              name={FIELD_NAMES.apiUrl}
+              label={FIELD_NAMES.apiUrl}
               defaultValue={DEFAULT_VALUES.apiUrl}
               error={fieldErrors.apiUrl?.[0]}
               autoComplete="url"
@@ -82,8 +93,8 @@ export function LoginForm() {
               classNames={FIELD_CLASS_NAMES}
             />
             <TextInput
-              name="idInstance"
-              label="idInstance"
+              name={FIELD_NAMES.idInstance}
+              label={FIELD_NAMES.idInstance}
               placeholder="7201234567"
               defaultValue={DEFAULT_VALUES.idInstance}
               error={fieldErrors.idInstance?.[0]}
@@ -94,8 +105,8 @@ export function LoginForm() {
               classNames={FIELD_CLASS_NAMES}
             />
             <PasswordInput
-              name="apiTokenInstance"
-              label="apiTokenInstance"
+              name={FIELD_NAMES.apiTokenInstance}
+              label={FIELD_NAMES.apiTokenInstance}
               defaultValue={DEFAULT_VALUES.apiTokenInstance}
               error={fieldErrors.apiTokenInstance?.[0]}
               autoComplete="current-password"
@@ -105,7 +116,6 @@ export function LoginForm() {
             />
           </Stack>
 
-          {/* место под ошибку сервера занято всегда: кнопка не прыгает при её появлении */}
           <p className={cls.status} role="alert">
             {error ? getLoginErrorMessage(error) : null}
           </p>

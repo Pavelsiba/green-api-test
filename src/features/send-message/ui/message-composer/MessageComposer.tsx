@@ -1,16 +1,24 @@
 import { ActionIcon, Textarea } from "@mantine/core"
 import { SendHorizontal } from "lucide-react"
-import { type FormEvent, type KeyboardEvent, useState } from "react"
+import { type KeyboardEvent, type SubmitEvent, useState } from "react"
 import { useSendMessage } from "../../model/hooks/use-send-message"
 import cls from "./MessageComposer.module.css"
 
 type TMessageComposerProps = {
   chatId: string
-  /** Пока история не загружена, оптимистичному сообщению некуда встать */
   disabled?: boolean
 }
 
-/** Плавающая панель ввода MAX: карточка с тенью, радиус 16, кнопка отправки справа */
+const TEXTAREA_CLASS_NAMES = { input: cls.input }
+
+const isSendKey = (event: KeyboardEvent<HTMLTextAreaElement>) =>
+  event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing
+
+/**
+ * Плавающая панель ввода в стиле MAX: карточка с тенью, кнопка отправки справа. Enter отправляет,
+ * Shift+Enter переносит строку, Enter во время набора через IME подтверждает слово. `disabled` —
+ * пока история чата не загружена: оптимистичному сообщению некуда встать.
+ */
 export function MessageComposer({ chatId, disabled = false }: TMessageComposerProps) {
   const { send } = useSendMessage()
   const [text, setText] = useState("")
@@ -23,14 +31,13 @@ export function MessageComposer({ chatId, disabled = false }: TMessageComposerPr
     setText("")
   }
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
     submit()
   }
 
-  // Enter — отправить, Shift+Enter — перенос; во время набора через IME Enter подтверждает слово
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return
+    if (!isSendKey(event)) return
     event.preventDefault()
     submit()
   }
@@ -39,7 +46,7 @@ export function MessageComposer({ chatId, disabled = false }: TMessageComposerPr
     <form className={cls.composer} onSubmit={handleSubmit}>
       <Textarea
         className={cls.field}
-        classNames={{ input: cls.input }}
+        classNames={TEXTAREA_CLASS_NAMES}
         value={text}
         onChange={(event) => setText(event.currentTarget.value)}
         onKeyDown={handleKeyDown}

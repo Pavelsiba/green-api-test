@@ -1,20 +1,27 @@
 import { ActionIcon, Loader, TextInput } from "@mantine/core"
 import { ArrowRight, Search } from "lucide-react"
-import { type FormEvent, useState } from "react"
+import { type SubmitEvent, useState } from "react"
 import { getStartChatErrorMessage } from "../../lib/get-start-chat-error-message"
 import { normalizePhone, phoneSchema } from "../../lib/normalize-phone"
 import { useStartChat } from "../../model/hooks/use-start-chat"
 import cls from "./StartChatForm.module.css"
 
-/** Поле «новый чат по номеру» над списком, на месте поиска MAX */
+const INPUT_CLASS_NAMES = { input: cls.input }
+
+const parsePhone = (value: string) => phoneSchema.safeParse(normalizePhone(value))
+
+/**
+ * Поле «новый чат по номеру» над списком чатов, на месте поиска MAX. Номер нормализуется
+ * и проверяется на клиенте до запроса. Строка под ошибку занята всегда — список не прыгает.
+ */
 export function StartChatForm() {
   const [value, setValue] = useState("")
   const [formatError, setFormatError] = useState<string | null>(null)
   const { startChat, isPending, error, reset } = useStartChat({ onStarted: () => setValue("") })
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const result = phoneSchema.safeParse(normalizePhone(value))
+    const result = parsePhone(value)
     if (!result.success) {
       setFormatError(result.error.issues[0]?.message ?? null)
       return
@@ -34,7 +41,7 @@ export function StartChatForm() {
   return (
     <form className={cls.form} onSubmit={handleSubmit} noValidate>
       <TextInput
-        classNames={{ input: cls.input }}
+        classNames={INPUT_CLASS_NAMES}
         value={value}
         onChange={(event) => handleChange(event.currentTarget.value)}
         placeholder="Новый чат: номер телефона"
@@ -56,7 +63,6 @@ export function StartChatForm() {
         }
         error={Boolean(message)}
       />
-      {/* строка под ошибку занята всегда: список под формой не прыгает */}
       <p className={cls.error} role="alert">
         {message}
       </p>
