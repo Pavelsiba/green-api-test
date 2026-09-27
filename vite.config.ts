@@ -9,7 +9,6 @@ export default defineConfig(({ mode }) => {
     base: "./",
     plugins: [react()],
     preview: {
-      host: "127.0.0.1",
       strictPort: true
     },
     resolve: {
