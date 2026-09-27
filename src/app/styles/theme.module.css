@@ -4,9 +4,14 @@
   --input-bd: transparent;
   --input-bd-focus: var(--stroke-themed);
   --input-color: var(--text-primary);
+  --input-placeholder-color: var(--mantine-color-placeholder);
   --input-fz: 15px;
 
   letter-spacing: 0.15px;
+
+  &[data-error] {
+    --input-bd: var(--mantine-color-error);
+  }
 }
 
 .label {

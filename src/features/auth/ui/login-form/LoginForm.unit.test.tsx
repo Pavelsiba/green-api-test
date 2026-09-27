@@ -30,6 +30,16 @@ describe("LoginForm", () => {
     expect(greenApi.getStateInstance).not.toHaveBeenCalled()
   })
 
+  it("asks to fill an empty idInstance instead of describing its format", () => {
+    renderForm()
+    fill(/idInstance/, "")
+
+    fireEvent.click(screen.getByRole("button", { name: "Войти" }))
+
+    expect(screen.getByText("Укажите idInstance")).toBeInTheDocument()
+    expect(screen.queryByText(/Только цифры/)).not.toBeInTheDocument()
+  })
+
   it("shows the server verdict for an instance that is not ready", async () => {
     vi.mocked(greenApi.getStateInstance).mockResolvedValue("notAuthorized")
     renderForm()
