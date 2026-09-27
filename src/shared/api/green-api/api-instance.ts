@@ -1,13 +1,8 @@
 import type * as z from "zod/mini"
-import { ApiError, getHttpError } from "./api-error"
-import type { TCredentials } from "./schemas"
+import { request } from "../http"
+import { createApiError, getHttpError } from "./api-error"
+import { errorBodySchema, rejectedResponseSchema, type TCredentials } from "./schemas"
 import { validate } from "./validate"
-
-let currentCredentials: TCredentials | null = null
-
-export const setCredentials = (credentials: TCredentials | null) => {
-  currentCredentials = credentials
-}
 
 type TApiInit<TSchema extends z.ZodMiniType> = Omit<RequestInit, "body" | "credentials"> & {
   schema: TSchema
@@ -17,10 +12,35 @@ type TApiInit<TSchema extends z.ZodMiniType> = Omit<RequestInit, "body" | "crede
   allowEmpty?: boolean
 }
 
+const ERROR_TEXT_LENGTH = 200
+
+let currentCredentials: TCredentials | null = null
+
+const isAbortError = (error: unknown) =>
+  error instanceof DOMException && error.name === "AbortError"
+
+async function send(url: string, init: Parameters<typeof request>[1]) {
+  try {
+    return await request(url, init)
+  } catch (error) {
+    if (isAbortError(error)) throw error
+    throw createApiError({
+      kind: "network",
+      message: error instanceof Error ? error.message : String(error)
+    })
+  }
+}
+
+export const setCredentials = (credentials: TCredentials | null) => {
+  currentCredentials = credentials
+}
+
 /**
- * Запрос к `{apiUrl}/waInstance{id}/{method}/{token}`: креды из `setCredentials` или явный
- * `auth` (проверка на экране входа), ответ проверяется схемой, ошибки — `ApiError`.
- * `allowEmpty` — пустая очередь уведомлений. `AbortError` пробрасывается как есть.
+ * Запрос к методу GREEN-API `{apiUrl}/waInstance{id}/{method}/{token}` поверх общего HTTP-слоя
+ * (`shared/api/http`). Креды из `setCredentials` или явный `auth` (проверка на экране входа).
+ * Ошибки HTTP и сети — `AppError` источника `api` с видом по статусу; отказ `{ status: false }` при
+ * HTTP 200 — `rejected`; пустое тело допустимо только с `allowEmpty` (пустая очередь уведомлений);
+ * ответ проверяется схемой. `AbortError` пробрасывается как есть.
  */
 export async function greenApiInstance<TSchema extends z.ZodMiniType>(
   method: string,
@@ -32,63 +52,35 @@ export async function greenApiInstance<TSchema extends z.ZodMiniType>(
 ): Promise<z.infer<TSchema>>
 export async function greenApiInstance<TSchema extends z.ZodMiniType>(
   method: string,
-  { schema, json, path = "", auth, allowEmpty, ...init }: TApiInit<TSchema>
+  { schema, path = "", auth, allowEmpty, ...init }: TApiInit<TSchema>
 ): Promise<z.infer<TSchema> | null> {
   const credentials = auth ?? currentCredentials
-  if (!credentials) throw new ApiError({ kind: "unauthorized" })
+  if (!credentials) throw createApiError({ kind: "unauthorized" })
 
   const { apiUrl, idInstance, apiTokenInstance } = credentials
   const url = `${apiUrl.replace(/\/+$/, "")}/waInstance${idInstance}/${method}/${apiTokenInstance}${path}`
-  const headers =
-    json === undefined ? init.headers : { "Content-Type": "application/json", ...init.headers }
-  const body = json === undefined ? undefined : JSON.stringify(json)
+  const { ok, status, body, text } = await send(url, init)
 
-  let response: Response
-  let text: string
-  try {
-    response = await fetch(url, { ...init, headers, body })
-    text = await response.text()
-  } catch (error) {
-    if (error instanceof DOMException && error.name === "AbortError") throw error
-    throw new ApiError({
-      kind: "network",
-      message: error instanceof Error ? error.message : String(error)
-    })
+  if (!ok) {
+    const message =
+      errorBodySchema.safeParse(body).data?.message ?? text.slice(0, ERROR_TEXT_LENGTH)
+    throw createApiError(getHttpError(status, message))
   }
 
-  const data = parseJson(text)
-
-  if (!response.ok) throw new ApiError(getHttpError(response.status, getErrorMessage(data, text)))
-  if (data === undefined) throw new ApiError({ kind: "badResponse", message: text.slice(0, 200) })
-  if (isRejected(data)) throw new ApiError({ kind: "rejected", reason: data.reason })
-  if (data === null) {
+  if (body === undefined) {
+    throw createApiError({ kind: "badResponse", message: text.slice(0, ERROR_TEXT_LENGTH) })
+  }
+  const rejected = rejectedResponseSchema.safeParse(body)
+  if (rejected.success) throw createApiError({ kind: "rejected", reason: rejected.data.reason })
+  if (body === null) {
     if (allowEmpty) return null
-    throw new ApiError({ kind: "badResponse", message: `[${method}] empty body` })
+    throw createApiError({ kind: "badResponse", message: `[${method}] empty body` })
   }
 
-  const result = validate(schema, data, method)
-  if (!result.ok) throw new ApiError({ kind: "badResponse", message: result.reason })
+  const result = validate(schema, body, method)
+  if (!result.ok) {
+    console.error(result.reason)
+    throw createApiError({ kind: "badResponse", message: result.reason })
+  }
   return result.data
-}
-
-function parseJson(text: string): unknown {
-  if (text.trim() === "") return null
-  try {
-    return JSON.parse(text)
-  } catch {
-    return undefined
-  }
-}
-
-function isRejected(data: unknown): data is { status: false; reason: string } {
-  return typeof data === "object" && data !== null && "status" in data && data.status === false
-}
-
-function getErrorMessage(data: unknown, text: string): string {
-  return typeof data === "object" &&
-    data !== null &&
-    "message" in data &&
-    typeof data.message === "string"
-    ? data.message
-    : text.slice(0, 200)
 }

@@ -2,12 +2,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useSetAtom } from "jotai"
 import type { TCredentials } from "@/shared/api"
 import { instanceStateQueryOptions } from "../../api/auth-queries"
-import { InstanceStateError } from "../../lib/instance-state-error"
+import { createInstanceStateError } from "../../lib/auth-error"
 import { credentialsAtom } from "../credentials-atom"
 
 /**
  * Проверяет креды через `getStateInstance` и сохраняет их, только если инстанс `authorized`.
- * Ошибка — `ApiError` или `InstanceStateError`; текст для экрана даёт `getLoginErrorMessage`.
+ * Ошибка — `AppError` источника `api` или `auth`; текст для экрана даёт `getLoginErrorMessage`.
  */
 export function useLogin() {
   const queryClient = useQueryClient()
@@ -19,7 +19,7 @@ export function useLogin() {
         ...instanceStateQueryOptions(credentials),
         staleTime: 0
       })
-      if (state !== "authorized") throw new InstanceStateError(state)
+      if (state !== "authorized") throw createInstanceStateError(state)
       return credentials
     },
     onSuccess: (credentials) => setCredentials(credentials)

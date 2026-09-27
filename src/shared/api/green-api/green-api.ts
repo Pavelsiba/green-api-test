@@ -11,9 +11,14 @@ import {
   type TJournalEnvelope,
   type TJournalMessage,
   type TNotification,
+  webhookChatIdSchema,
   webhookSchema
 } from "./schemas"
 import { validate } from "./validate"
+
+type TCheckWhatsappResult = { exists: true; chatId: string } | { exists: false }
+
+const JOURNAL_DAY_MINUTES = 1440
 
 function parseJournalMessage(envelope: TJournalEnvelope, method: string): TJournalMessage {
   const result = validate(journalMessageSchema, envelope, `${method} ${envelope.typeMessage}`)
@@ -30,18 +35,6 @@ function parseJournalMessage(envelope: TJournalEnvelope, method: string): TJourn
     original: envelope.typeMessage
   }
 }
-
-function readWebhookChatId(body: Record<string, unknown>): string | undefined {
-  const { chatId, senderData } = body
-  if (typeof chatId === "string") return chatId
-  if (typeof senderData !== "object" || senderData === null) return undefined
-  const senderChatId = (senderData as Record<string, unknown>).chatId
-  return typeof senderChatId === "string" ? senderChatId : undefined
-}
-
-const JOURNAL_DAY_MINUTES = 1440
-
-type TCheckWhatsappResult = { exists: true; chatId: string } | { exists: false }
 
 /**
  * Транспорт GREEN-API: методы без знания о кэше. Ключи и `queryOptions` живут в слайсах,
@@ -138,7 +131,7 @@ export const greenApi = {
     })
     if (!envelope) return null
 
-    const chatId = readWebhookChatId(envelope.body)
+    const chatId = webhookChatIdSchema.safeParse(envelope.body).data
     const context = `webhook ${envelope.body.typeWebhook}${chatId ? ` ${chatId}` : ""}`
     const body = validate(webhookSchema, envelope.body, context)
     if (!body.ok) console.warn(`${body.reason}\n(notification will be deleted)`)

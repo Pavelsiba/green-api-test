@@ -1,6 +1,7 @@
 export {
-  ApiError,
+  createApiError,
   greenApi,
+  isApiError,
   isJournalTextMessage,
   isTextMessageData,
   isUnauthorizedError,

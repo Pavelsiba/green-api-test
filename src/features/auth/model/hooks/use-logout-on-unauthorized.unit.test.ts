@@ -1,6 +1,6 @@
 import { renderHook, waitFor } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
-import { ApiError } from "@/shared/api"
+import { createApiError } from "@/shared/api"
 import { createQueryWrapper } from "@/shared/lib"
 import { credentialsAtom } from "../credentials-atom"
 import { useLogoutOnUnauthorized } from "./use-logout-on-unauthorized"
@@ -16,8 +16,8 @@ const credentials = {
   apiTokenInstance: "tkn"
 }
 
-const unauthorized = () => Promise.reject(new ApiError({ kind: "unauthorized" }))
-const rateLimited = () => Promise.reject(new ApiError({ kind: "rateLimited" }))
+const unauthorized = () => Promise.reject(createApiError({ kind: "unauthorized" }))
+const rateLimited = () => Promise.reject(createApiError({ kind: "rateLimited" }))
 
 const setup = ({ loggedIn }: { loggedIn: boolean }) => {
   const { wrapper, store, queryClient } = createQueryWrapper()

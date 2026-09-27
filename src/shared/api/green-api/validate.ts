@@ -3,14 +3,12 @@ import * as z from "zod/mini"
 
 z.config(en())
 
-type TIssue = z.core.$ZodIssue
-
 export type TValidated<T> = { ok: true; data: T } | { ok: false; reason: string }
 
 /**
- * Гибридная проверка по strict-схеме.
- * - Только лишние ключи: сервер добавил поле, которое мы не читаем. Warn и пропускаем данные.
- * - Нет поля или не тот тип: данные испортят состояние. Отказ.
+ * Проверка ответа по strict-схеме: контракт GREEN-API фиксирован. Любое расхождение — новое поле,
+ * пропавшее поле, другой тип — это поломка контракта на стороне API: отказ с причиной для лога,
+ * фронт под неизвестные данные не подстраивается.
  */
 export function validate<TSchema extends z.ZodMiniType>(
   schema: TSchema,
@@ -19,19 +17,5 @@ export function validate<TSchema extends z.ZodMiniType>(
 ): TValidated<z.infer<TSchema>> {
   const parsed = schema.safeParse(data)
   if (parsed.success) return { ok: true, data: parsed.data }
-
-  const message = z.prettifyError(parsed.error)
-  if (hasOnlyExtraKeys(parsed.error.issues)) {
-    console.warn(`[${context}] schema drift, extra keys passed through:\n${message}`)
-    return { ok: true, data: data as z.infer<TSchema> }
-  }
-  return { ok: false, reason: `[${context}] validation failed:\n${message}` }
-}
-
-function hasOnlyExtraKeys(issues: readonly TIssue[]): boolean {
-  return issues.every(
-    (issue) =>
-      issue.code === "unrecognized_keys" ||
-      (issue.code === "invalid_union" && issue.errors.some(hasOnlyExtraKeys))
-  )
+  return { ok: false, reason: `[${context}] validation failed:\n${z.prettifyError(parsed.error)}` }
 }

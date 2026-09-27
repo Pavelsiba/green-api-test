@@ -1,4 +1,10 @@
-export { ApiError, isTransientError, isUnauthorizedError, type TApiErrorKind } from "./api-error"
+export {
+  createApiError,
+  isApiError,
+  isTransientError,
+  isUnauthorizedError,
+  type TApiErrorKind
+} from "./api-error"
 export { setCredentials } from "./api-instance"
 export { greenApi } from "./green-api"
 export type {

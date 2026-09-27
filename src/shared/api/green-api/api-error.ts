@@ -1,5 +1,7 @@
+import { AppError, isAppError } from "@/shared/lib"
+
 /**
- * Все способы, которыми падает вызов GREEN-API. HTTP 200 сам по себе не успех:
+ * Ошибки транспорта GREEN-API — `AppError` с источником `api`. HTTP 200 сам по себе не успех:
  * `{ status: false, reason }` приходит с 200 и становится `rejected`. 401 и 404 (неизвестный
  * idInstance) — `unauthorized`, 403 — `suspended`, 469 — `contactLimit`: его нельзя
  * повторять, повтор включает антифрод. Повторяются только временные сбои (`isTransientError`).
@@ -15,26 +17,21 @@ export type TApiErrorKind =
   | { kind: "http"; status: number; message: string }
   | { kind: "badResponse"; message: string }
 
-export class ApiError extends Error {
-  readonly error: TApiErrorKind
-
-  constructor(error: TApiErrorKind) {
-    super(`ApiError: ${error.kind}`)
-    this.error = error
-    this.name = "ApiError"
-  }
-}
-
-export const isUnauthorizedError = (error: unknown): boolean =>
-  error instanceof ApiError && error.error.kind === "unauthorized"
-
-export const isTransientError = (error: unknown): boolean =>
-  !(error instanceof ApiError) ||
-  error.error.kind === "network" ||
-  error.error.kind === "rateLimited" ||
-  (error.error.kind === "http" && error.error.status >= 500)
-
 type THttpErrorBuilder = (message: string) => TApiErrorKind
+
+const API_SOURCE = "api"
+
+const API_ERROR_KINDS: Record<TApiErrorKind["kind"], true> = {
+  network: true,
+  unauthorized: true,
+  suspended: true,
+  validation: true,
+  rateLimited: true,
+  contactLimit: true,
+  rejected: true,
+  http: true,
+  badResponse: true
+}
 
 const HTTP_ERROR_BY_STATUS: Record<number, THttpErrorBuilder> = {
   400: (message) => ({ kind: "validation", message }),
@@ -43,6 +40,24 @@ const HTTP_ERROR_BY_STATUS: Record<number, THttpErrorBuilder> = {
   404: () => ({ kind: "unauthorized" }),
   429: () => ({ kind: "rateLimited" }),
   469: () => ({ kind: "contactLimit" })
+}
+
+export const createApiError = (detail: TApiErrorKind) => new AppError(API_SOURCE, detail)
+
+export const isApiError = (error: unknown) =>
+  isAppError<typeof API_SOURCE, TApiErrorKind>(error, API_SOURCE, Object.keys(API_ERROR_KINDS))
+
+export const isUnauthorizedError = (error: unknown): boolean =>
+  isApiError(error) && error.detail.kind === "unauthorized"
+
+export const isTransientError = (error: unknown): boolean => {
+  if (!isApiError(error)) return !(error instanceof AppError)
+  const { detail } = error
+  return (
+    detail.kind === "network" ||
+    detail.kind === "rateLimited" ||
+    (detail.kind === "http" && detail.status >= 500)
+  )
 }
 
 export const getHttpError = (status: number, message: string): TApiErrorKind =>

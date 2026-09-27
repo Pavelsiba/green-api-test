@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { ApiError, type TApiErrorKind } from "./api-error"
+import { isApiError, type TApiErrorKind } from "./api-error"
 import { setCredentials } from "./api-instance"
 import { greenApi } from "./green-api"
 
@@ -29,12 +29,12 @@ function mockFetchThrow(error: unknown) {
 async function apiError(promise: Promise<unknown>): Promise<TApiErrorKind> {
   const e = await promise.then(
     () => {
-      throw new Error("expected ApiError, got success")
+      throw new Error("expected an api AppError, got success")
     },
     (e: unknown) => e
   )
-  expect(e).toBeInstanceOf(ApiError)
-  return (e as ApiError).error
+  if (!isApiError(e)) throw new Error("expected an api AppError")
+  return e.detail
 }
 
 const instanceData = { idInstance: 7201000001, wid: "79990000000@c.us", typeInstance: "whatsapp" }
@@ -226,13 +226,12 @@ describe("sendMessage", () => {
     })
   })
 
-  it("passes an unexpected field through with a drift warning", async () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+  it("fails on an unexpected field and logs the broken contract", async () => {
+    const logError = vi.spyOn(console, "error").mockImplementation(() => {})
+    const reason = '[sendMessage] validation failed:\n✖ Unrecognized key: "extra"'
     mockFetch('{"idMessage":"A","extra":1}')
-    expect(await send()).toEqual({ idMessage: "A", extra: 1 })
-    expect(warn).toHaveBeenCalledWith(
-      '[sendMessage] schema drift, extra keys passed through:\n✖ Unrecognized key: "extra"'
-    )
+    expect(await apiError(send())).toEqual({ kind: "badResponse", message: reason })
+    expect(logError).toHaveBeenCalledWith(reason)
   })
 
   it("still fails when an extra key comes with a missing field", async () => {
@@ -282,7 +281,12 @@ describe("receiveNotification", () => {
     ],
     ["an @lid chat id", { ...statusRead, chatId: "123@lid" }, "outgoingMessageStatus"],
     ["a missing idMessage", { ...statusRead, idMessage: undefined }, "outgoingMessageStatus"],
-    ["an unknown status", { ...statusRead, status: "exploded" }, "outgoingMessageStatus"]
+    ["an unknown status", { ...statusRead, status: "exploded" }, "outgoingMessageStatus"],
+    [
+      "a broken text message instead of passing it as media",
+      { ...incomingText, messageData: { typeMessage: "textMessage" } },
+      "incomingMessageReceived"
+    ]
   ])("turns %s into unknown, keeping receiptId for deletion", async (_label, body, original) => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
     mockFetch(JSON.stringify({ receiptId: 7, body }))
@@ -321,13 +325,18 @@ describe("receiveNotification", () => {
       }
     ],
     ["inside nested sender data", { ...incomingText, senderData: { ...senderData, isBot: false } }]
-  ])("passes extra keys %s through with a drift warning", async (_label, body) => {
+  ])("turns a webhook with an extra key %s into unknown", async (_label, body) => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
     mockFetch(JSON.stringify({ receiptId: 8, body }))
-    expect(await greenApi.receiveNotification()).toEqual({ receiptId: 8, body })
-    expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining("schema drift, extra keys passed through")
-    )
+    expect(await greenApi.receiveNotification()).toEqual({
+      receiptId: 8,
+      body: {
+        typeWebhook: "unknown",
+        original: body.typeWebhook,
+        reason: expect.stringContaining("validation failed")
+      }
+    })
+    expect(warn).toHaveBeenCalled()
   })
 
   it("throws badResponse when the envelope has no receiptId", async () => {

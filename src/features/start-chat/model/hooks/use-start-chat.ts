@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { chatCache, chatListQueryOptions, useSelectChat } from "@/entities/chat"
 import { greenApi } from "@/shared/api"
-import { NoWhatsappError } from "../../lib/get-start-chat-error-message"
+import { createNoWhatsappError } from "../../lib/get-start-chat-error-message"
 
 /**
  * Открывает чат по номеру. Уже известный чат открывается без запроса: у checkWhatsapp
@@ -18,7 +18,7 @@ export function useStartChat({ onStarted }: { onStarted?: () => void } = {}) {
       if (chats?.some((chat) => chat.chatId === knownChatId)) return knownChatId
 
       const result = await greenApi.checkWhatsapp(phone)
-      if (!result.exists) throw new NoWhatsappError()
+      if (!result.exists) throw createNoWhatsappError()
       return result.chatId
     },
     onSuccess: (chatId) => {

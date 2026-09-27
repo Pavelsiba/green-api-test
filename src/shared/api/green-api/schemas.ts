@@ -2,11 +2,23 @@ import * as z from "zod/mini"
 
 /**
  * Рантайм-контракты ответов GREEN-API. Объекты strict: перечислены все поля,
- * виденные в живых ответах 2026-09-25. Лишнее поле — сигнал дрейфа (см. `validate`).
- * Нестрогие только ветки медиа (вне скоупа), у них `typeMessage: string` — сужать текст
- * нужно guard-функциями `isTextMessageData` / `isJournalTextMessage`. Вебхук `unknown` опрос
- * обязан удалить, иначе очередь будет отдавать его вечно.
+ * виденные в живых ответах 2026-09-25. Любое расхождение — поломка контракта (см. `validate`).
+ * Текст приходит как `textMessage` или `extendedTextMessage` (со ссылкой, цитатой, отправленный
+ * через API). Нестрогие только ветки медиа (вне скоупа), у них `typeMessage: string`, текстовый
+ * `typeMessage` в них запрещён — сужать текст нужно guard-функциями `isTextMessageData` /
+ * `isJournalTextMessage`. Вебхук `unknown` опрос обязан удалить, иначе очередь будет отдавать
+ * его вечно. `webhookChatIdSchema` тоже нестрогая: достаёт chatId у вебхука, не прошедшего схему.
  */
+
+const TEXT_MESSAGE_TYPES: readonly string[] = ["textMessage", "extendedTextMessage"]
+
+const isNotTextType = (typeMessage: string) => !TEXT_MESSAGE_TYPES.includes(typeMessage)
+
+export const isTextMessageData = (data: TMessageData): data is TTextMessageData =>
+  TEXT_MESSAGE_TYPES.includes(data.typeMessage)
+
+export const isJournalTextMessage = (message: TJournalMessage): message is TJournalTextMessage =>
+  TEXT_MESSAGE_TYPES.includes(message.typeMessage)
 
 export type TCredentials = {
   apiUrl: string
@@ -72,7 +84,18 @@ export const deleteNotificationResponseSchema = z.strictObject({
     .check(z.describe('Пусто при успехе, "Message receiptId = N not found" при повторе'))
 })
 
-const outgoingStatusSchema = z.enum([
+export const rejectedResponseSchema = z.object({
+  status: z
+    .literal(false)
+    .check(z.describe("Отказ GREEN-API приходит с HTTP 200, а не кодом ошибки")),
+  reason: z.string()
+})
+
+export const errorBodySchema = z.object({
+  message: z.string().check(z.describe("Текст ошибки в теле ответа, например 400 валидации"))
+})
+
+const outgoingStatusSchema = z.literal([
   "pending",
   "sent",
   "delivered",
@@ -81,11 +104,6 @@ const outgoingStatusSchema = z.enum([
   "noAccount",
   "notInGroup"
 ])
-
-const textMessageDataSchema = z.strictObject({
-  typeMessage: z.literal("textMessage"),
-  textMessageData: z.strictObject({ textMessage: z.string() })
-})
 
 const extendedTextSchema = z.strictObject({
   text: z.string().check(z.describe("Сюда кладётся текст, отправленный через API или со ссылкой")),
@@ -97,14 +115,17 @@ const extendedTextSchema = z.strictObject({
   isForwarded: z.optional(z.boolean())
 })
 
+const textMessageDataSchema = z.strictObject({
+  typeMessage: z.literal("textMessage"),
+  textMessageData: z.strictObject({ textMessage: z.string() })
+})
+
 const extendedTextMessageDataSchema = z.strictObject({
   typeMessage: z.literal("extendedTextMessage"),
   extendedTextMessageData: extendedTextSchema
 })
 
-const TEXT_MESSAGE_TYPES: readonly string[] = ["textMessage", "extendedTextMessage"]
-
-const isNotTextType = (typeMessage: string) => !TEXT_MESSAGE_TYPES.includes(typeMessage)
+type TTextMessageData = z.infer<typeof textMessageDataSchema | typeof extendedTextMessageDataSchema>
 
 const unsupportedMessageDataSchema = z.looseObject({
   typeMessage: z
@@ -120,6 +141,8 @@ const messageDataSchema = z.union([
   extendedTextMessageDataSchema,
   unsupportedMessageDataSchema
 ])
+
+export type TMessageData = z.infer<typeof messageDataSchema>
 
 const instanceDataSchema = z.strictObject({
   idInstance: z.number(),
@@ -183,10 +206,37 @@ export const webhookSchema = z.discriminatedUnion("typeWebhook", [
   })
 ])
 
+export type TWebhook = z.infer<typeof webhookSchema>
+export type TOutgoingMessageStatus = Extract<
+  TWebhook,
+  { typeWebhook: "outgoingMessageStatus" }
+>["status"]
+
+export type TUnknownWebhook = { typeWebhook: "unknown"; original: string; reason: string }
+
 export const notificationEnvelopeSchema = z.strictObject({
   receiptId: z.number(),
   body: z.looseObject({ typeWebhook: z.string() })
 })
+
+export type TNotification = { receiptId: number; body: TWebhook | TUnknownWebhook }
+
+export const webhookChatIdSchema = z.pipe(
+  z.discriminatedUnion("typeWebhook", [
+    z.object({ typeWebhook: z.literal("outgoingMessageStatus"), chatId: z.string() }),
+    z.object({
+      typeWebhook: z.literal([
+        "incomingMessageReceived",
+        "outgoingMessageReceived",
+        "outgoingAPIMessageReceived"
+      ]),
+      senderData: z.object({ chatId: z.string() })
+    })
+  ]),
+  z.transform((webhook) =>
+    webhook.typeWebhook === "outgoingMessageStatus" ? webhook.chatId : webhook.senderData.chatId
+  )
+)
 
 const journalBaseShape = {
   idMessage: idMessageSchema,
@@ -218,26 +268,23 @@ const journalOutgoingShape = {
 }
 
 const journalTextShape = {
-  typeMessage: z.literal("textMessage"),
-  textMessage: z.string()
-}
-
-const journalExtendedTextShape = {
-  typeMessage: z.literal("extendedTextMessage"),
-  textMessage: z.string().check(z.describe("Дублирует extendedTextMessage.text")),
-  extendedTextMessage: extendedTextSchema
+  typeMessage: z.literal(["textMessage", "extendedTextMessage"]),
+  textMessage: z
+    .string()
+    .check(z.describe("У extendedTextMessage дублирует extendedTextMessage.text")),
+  extendedTextMessage: z.optional(extendedTextSchema)
 }
 
 const journalTextMessageSchema = z.union([
   z.strictObject({ ...journalIncomingShape, ...journalTextShape }),
-  z.strictObject({ ...journalIncomingShape, ...journalExtendedTextShape }),
-  z.strictObject({ ...journalOutgoingShape, ...journalTextShape }),
-  z.strictObject({ ...journalOutgoingShape, ...journalExtendedTextShape })
+  z.strictObject({ ...journalOutgoingShape, ...journalTextShape })
 ])
+
+export type TJournalTextMessage = z.infer<typeof journalTextMessageSchema>
 
 export const journalEnvelopeSchema = z.array(
   z.looseObject({
-    type: z.enum(["incoming", "outgoing"]),
+    type: z.literal(["incoming", "outgoing"]),
     idMessage: idMessageSchema,
     timestamp: timestampSchema,
     chatId: z.string(),
@@ -245,8 +292,10 @@ export const journalEnvelopeSchema = z.array(
   })
 )
 
+export type TJournalEnvelope = z.infer<typeof journalEnvelopeSchema>[number]
+
 const journalUnsupportedMessageSchema = z.looseObject({
-  type: z.enum(["incoming", "outgoing"]),
+  type: z.literal(["incoming", "outgoing"]),
   idMessage: idMessageSchema,
   timestamp: timestampSchema,
   chatId: z.string(),
@@ -258,20 +307,6 @@ export const journalMessageSchema = z.union([
   journalUnsupportedMessageSchema
 ])
 
-export type TMessageData = z.infer<typeof messageDataSchema>
-export type TWebhook = z.infer<typeof webhookSchema>
-export type TOutgoingMessageStatus = Extract<
-  TWebhook,
-  { typeWebhook: "outgoingMessageStatus" }
->["status"]
-
-export type TUnknownWebhook = { typeWebhook: "unknown"; original: string; reason: string }
-
-export type TNotification = { receiptId: number; body: TWebhook | TUnknownWebhook }
-
-export type TJournalEnvelope = z.infer<typeof journalEnvelopeSchema>[number]
-export type TJournalTextMessage = z.infer<typeof journalTextMessageSchema>
-
 type TUnknownJournalMessage = {
   type: TJournalEnvelope["type"]
   idMessage: string
@@ -282,11 +317,3 @@ type TUnknownJournalMessage = {
 }
 
 export type TJournalMessage = z.infer<typeof journalMessageSchema> | TUnknownJournalMessage
-
-type TTextMessageData = z.infer<typeof textMessageDataSchema | typeof extendedTextMessageDataSchema>
-
-export const isTextMessageData = (data: TMessageData): data is TTextMessageData =>
-  TEXT_MESSAGE_TYPES.includes(data.typeMessage)
-
-export const isJournalTextMessage = (message: TJournalMessage): message is TJournalTextMessage =>
-  TEXT_MESSAGE_TYPES.includes(message.typeMessage)

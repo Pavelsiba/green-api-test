@@ -1,5 +1,7 @@
-import { ApiError, type TApiErrorKind } from "@/shared/api"
-import { InstanceStateError } from "./instance-state-error"
+import { isApiError, type TApiErrorKind } from "@/shared/api"
+import { isAuthError } from "./auth-error"
+
+const FALLBACK_MESSAGE = "Не удалось войти. Попробуйте ещё раз"
 
 const MESSAGE_BY_STATE: Record<string, string> = {
   notAuthorized: "Инстанс не привязан к WhatsApp: отсканируйте QR-код в личном кабинете",
@@ -10,22 +12,26 @@ const MESSAGE_BY_STATE: Record<string, string> = {
   suspended: "Инстанс приостановлен: проверьте оплату в личном кабинете"
 }
 
-const MESSAGE_BY_KIND: Partial<Record<TApiErrorKind["kind"], string>> = {
+const MESSAGE_BY_API_KIND: Partial<Record<TApiErrorKind["kind"], string>> = {
   unauthorized: "Неверный idInstance или apiTokenInstance",
   network: "Сервер недоступен: проверьте apiUrl и подключение к интернету",
   suspended: "Аккаунт GREEN-API заблокирован",
   rateLimited: "Слишком много запросов. Подождите секунду и повторите"
 }
 
+const UNKNOWN_STATE_MESSAGE = (state: string) => `Инстанс не готов: состояние «${state}»`
+
+const UNKNOWN_API_KIND_MESSAGE = (kind: string) => `Ошибка сервера (${kind}). Попробуйте позже`
+
 /** Текст ошибки входа для пользователя */
 export const getLoginErrorMessage = (error: unknown): string => {
-  if (error instanceof InstanceStateError) {
-    return MESSAGE_BY_STATE[error.state] ?? `Инстанс не готов: состояние «${error.state}»`
+  if (isAuthError(error)) {
+    const { state } = error.detail
+    return MESSAGE_BY_STATE[state] ?? UNKNOWN_STATE_MESSAGE(state)
   }
-  if (error instanceof ApiError) {
-    return (
-      MESSAGE_BY_KIND[error.error.kind] ?? `Ошибка сервера (${error.error.kind}). Попробуйте позже`
-    )
+  if (isApiError(error)) {
+    const { kind } = error.detail
+    return MESSAGE_BY_API_KIND[kind] ?? UNKNOWN_API_KIND_MESSAGE(kind)
   }
-  return "Не удалось войти. Попробуйте ещё раз"
+  return FALLBACK_MESSAGE
 }

@@ -1,8 +1,8 @@
 import { act, renderHook, waitFor } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
-import { ApiError, greenApi } from "@/shared/api"
+import { createApiError, greenApi, isApiError } from "@/shared/api"
 import { createQueryWrapper } from "@/shared/lib"
-import { InstanceStateError } from "../../lib/instance-state-error"
+import { isAuthError } from "../../lib/auth-error"
 import { credentialsAtom } from "../credentials-atom"
 import { useLogin } from "./use-login"
 
@@ -43,8 +43,10 @@ describe("useLogin", () => {
 
     act(() => result.current.login(credentials))
 
-    await waitFor(() => expect(result.current.error).toBeInstanceOf(InstanceStateError))
-    expect(result.current.error).toMatchObject({ state: "notAuthorized" })
+    await waitFor(() => expect(isAuthError(result.current.error)).toBe(true))
+    expect(result.current.error).toMatchObject({
+      detail: { kind: "instanceState", state: "notAuthorized" }
+    })
     expect(store.get(credentialsAtom)).toBeNull()
   })
 
@@ -62,12 +64,12 @@ describe("useLogin", () => {
   })
 
   it("passes transport errors through", async () => {
-    vi.mocked(greenApi.getStateInstance).mockRejectedValue(new ApiError({ kind: "unauthorized" }))
+    vi.mocked(greenApi.getStateInstance).mockRejectedValue(createApiError({ kind: "unauthorized" }))
     const { result, store } = renderLogin()
 
     act(() => result.current.login(credentials))
 
-    await waitFor(() => expect(result.current.error).toBeInstanceOf(ApiError))
+    await waitFor(() => expect(isApiError(result.current.error)).toBe(true))
     expect(store.get(credentialsAtom)).toBeNull()
   })
 })

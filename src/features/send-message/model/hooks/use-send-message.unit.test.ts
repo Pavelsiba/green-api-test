@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { chatQueryKeys, type TMessage } from "@/entities/chat"
-import { ApiError, greenApi } from "@/shared/api"
+import { createApiError, greenApi } from "@/shared/api"
 import { createQueryWrapper } from "@/shared/lib"
 import { useSendMessage } from "./use-send-message"
 
@@ -54,7 +54,7 @@ describe("useSendMessage", () => {
 
   it("marks the message failed when sending fails", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
-    vi.mocked(greenApi.sendMessage).mockRejectedValue(new ApiError({ kind: "rateLimited" }))
+    vi.mocked(greenApi.sendMessage).mockRejectedValue(createApiError({ kind: "rateLimited" }))
     const { result, history } = setup()
 
     act(() => result.current.send(chatId, "привет"))
